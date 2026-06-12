@@ -1,12 +1,13 @@
-/** Pixel "CR" monogram with a constant glitch loop (discrete frame swaps). */
+/** Pixel "CRY" monogram with a constant glitch loop (discrete frame swaps). */
 const C = ['.####', '#....', '#....', '#....', '#....', '.####'];
 const R = ['####.', '#...#', '####.', '#.#..', '#..#.', '#...#'];
+const Y = ['#...#', '#...#', '.#.#.', '..#..', '..#..', '..#..'];
 const SCRAMBLE = '#%&@?*+=<>';
 
 export function initLogo(canvas: HTMLCanvasElement) {
   const ctx = canvas.getContext('2d')!;
-  const cell = 5;
-  const cols = 11; // 5 + gap + 5
+  const cell = 4;
+  const cols = 17; // 5 + gap + 5 + gap + 5
   const rows = 6;
 
   const pixels: [number, number][] = [];
@@ -14,6 +15,7 @@ export function initLogo(canvas: HTMLCanvasElement) {
     for (let x = 0; x < 5; x++) {
       if (C[y][x] === '#') pixels.push([x, y]);
       if (R[y][x] === '#') pixels.push([x + 6, y]);
+      if (Y[y][x] === '#') pixels.push([x + 12, y]);
     }
   }
 
@@ -35,13 +37,11 @@ export function initLogo(canvas: HTMLCanvasElement) {
       }
     } else if (mode < 0.9) {
       // scrambled characters
-      ctx.font = '700 22px "JetBrains Mono", monospace';
+      ctx.font = '700 20px "JetBrains Mono", monospace';
       ctx.textBaseline = 'top';
-      ctx.fillText(
-        SCRAMBLE[(Math.random() * SCRAMBLE.length) | 0] + SCRAMBLE[(Math.random() * SCRAMBLE.length) | 0],
-        ox + 4,
-        2,
-      );
+      let s = '';
+      for (let i = 0; i < 3; i++) s += SCRAMBLE[(Math.random() * SCRAMBLE.length) | 0];
+      ctx.fillText(s, ox + 2, 2);
     } else {
       // sliced invert: full glyph + a displaced scan band
       for (const [x, y] of pixels) ctx.fillRect(ox + x * cell, y * cell, cell - 1, cell - 1);

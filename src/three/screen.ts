@@ -88,29 +88,31 @@ export class ScreenFX {
     }
     c.stroke();
 
-    // headline typewriter, wrapped, with highlighted word
-    c.font = '600 34px "JetBrains Mono", monospace';
+    // headline typewriter, char-wrapped (CJK-safe), with highlighted substring
+    c.font = '600 32px "JetBrains Mono", "Noto Sans SC", monospace';
     c.textBaseline = 'top';
-    const words = this.text.split(' ');
+    const hi = COPY.screen.highlight;
+    const hiStart = hi ? this.text.indexOf(hi) : -1;
     let x = 34;
     let y = 40;
     const maxW = W - 60;
-    for (const w of words) {
-      const piece = w + ' ';
-      const wWidth = c.measureText(piece).width;
-      if (x + wWidth > maxW) {
+    for (let i = 0; i < this.text.length; i++) {
+      const ch = this.text[i];
+      const chW = c.measureText(ch).width;
+      if (x + chW > maxW) {
         x = 34;
-        y += 42;
+        y += 44;
       }
-      if (w === COPY.screen.highlight) {
+      const inHi = hiStart >= 0 && i >= hiStart && i < hiStart + hi.length;
+      if (inHi) {
         c.fillStyle = '#3fd8c0';
-        c.fillRect(x - 2, y - 2, wWidth - c.measureText(' ').width + 4, 38);
+        c.fillRect(x - 1, y - 2, chW + 2, 38);
         c.fillStyle = '#071512';
       } else {
         c.fillStyle = '#e8f4f0';
       }
-      c.fillText(w, x, y);
-      x += wWidth;
+      c.fillText(ch, x, y);
+      x += chW;
     }
     // caret
     if (Math.floor(now / 500) % 2 === 0) {
@@ -119,7 +121,7 @@ export class ScreenFX {
     }
 
     // log lines
-    c.font = '12px "JetBrains Mono", monospace';
+    c.font = '12px "JetBrains Mono", "Noto Sans SC", monospace';
     c.fillStyle = 'rgba(180,210,202,0.55)';
     COPY.screen.logs.forEach((l, i) => c.fillText(l, 34, H - 92 + i * 20));
 

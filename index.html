@@ -1,20 +1,24 @@
 <!doctype html>
-<html lang="en" data-theme="day" data-zone="hero">
+<html lang="zh-CN" data-theme="day" data-zone="hero">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CR — AI Product Manager</title>
+    <title>cry — AI 产品经理</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=JetBrains+Mono:wght@400;500;700&family=Noto+Sans+SC:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
   </head>
   <body>
-    <!-- Preloader -->
+    <!-- Preloader: CLI boot -->
     <div id="preloader">
-      <h1 id="pre-title" class="type-title"></h1>
+      <div id="cli">
+        <span id="cli-prompt">cry@folio ~ %</span>
+        <span id="cli-cmd"></span><span class="caret cli-caret"></span>
+      </div>
+      <div id="cli-out"></div>
       <div id="pre-line"></div>
     </div>
 
@@ -28,24 +32,24 @@
           <path d="M62 2 C 50 26, 30 36, 10 34" stroke="currentColor" stroke-width="1" />
           <path d="M16 29 L 9 34 L 17 38" stroke="currentColor" stroke-width="1" fill="none" />
         </svg>
-        <span class="mono-label">Switch Day 'N' Night</span>
+        <span class="mono-label">切换 日 / 夜</span>
       </div>
     </div>
 
     <!-- Fixed HUD -->
     <header id="hud">
       <nav id="hud-nav">
-        <a href="#about" data-hover data-scramble>About me</a>
-        <a href="#works" data-hover data-scramble>Works</a>
-        <a href="#footer" data-hover data-scramble>Contact</a>
+        <a href="#about" data-hover data-scramble>关于我</a>
+        <a href="#works" data-hover data-scramble>作品</a>
+        <a href="#footer" data-hover data-scramble>联系</a>
       </nav>
-      <canvas id="hud-logo" width="66" height="30" data-hover></canvas>
+      <canvas id="hud-logo" width="76" height="28" data-hover></canvas>
       <div id="hud-right">
-        <span class="mono-label">Sound</span>
-        <button id="sound-toggle" data-hover aria-label="toggle sound"><i></i></button>
+        <span class="mono-label">声音</span>
+        <button id="sound-toggle" data-hover aria-label="切换声音"><i></i></button>
       </div>
-      <div id="hud-comment" class="mono-label">// Positioned at the axis of AI and product across strategy</div>
-      <div id="hud-scroll" class="mono-label">Scroll Down <b>■</b></div>
+      <div id="hud-comment" class="mono-label">// 站在 AI 与产品的交汇点</div>
+      <div id="hud-scroll" class="mono-label">向下滚动 <b>■</b></div>
       <div id="hud-clock" class="mono-label">00 : 00 am</div>
       <i class="reg-dot" style="left: 25%"></i>
       <i class="reg-dot" style="left: 75%"></i>
@@ -61,49 +65,47 @@
           <canvas id="snake"></canvas>
           <h2 id="about-title" class="type-title"></h2>
           <ul id="steps">
-            <li><span>(1)</span> Discover</li>
-            <li><span>(2)</span> Define</li>
-            <li><span>(3)</span> Build</li>
-            <li><span>(4)</span> Ship</li>
+            <li><span>(1)</span> 洞察</li>
+            <li><span>(2)</span> 定义</li>
+            <li><span>(3)</span> 构建</li>
+            <li><span>(4)</span> 交付</li>
           </ul>
           <div id="about-para" class="mono-para" data-reveal-lines>
-            I'm CR — an AI product manager turning fuzzy ideas into shipped
-            products. By pairing user research with a hands-on grasp of LLMs,
-            evals and data, I help teams find what matters and build it right.
+            我是 cry —— 一名 AI 产品经理，擅长把模糊的想法变成可交付的产品。以用户研究为起点，结合对
+            LLM、评测与数据的实操理解，帮团队找准要做的事，并把它做对。
           </div>
           <div id="about-sub">
-            <em>1 goal</em>
-            <span>to ship AI products people actually need</span>
+            <em>1 个目标</em>
+            <span>做出人们真正需要的 AI 产品</span>
           </div>
-          <div id="about-hint" class="mono-label">Scroll Down</div>
+          <div id="about-hint" class="mono-label">向下滚动</div>
         </section>
 
         <!-- Works gallery -->
         <section id="works">
           <p id="works-intro" class="mono-para" data-reveal-lines>
-            Positioned at the axis of AI and product across strategy, research,
-            shipping and beyond. I design AI products end-to-end — from problem
-            framing and prompt systems to evaluation and iteration loops.
+            站在 AI 与产品的交汇点，覆盖策略、调研与交付。我端到端地设计 AI
+            产品 —— 从问题定义、提示词系统，到评测体系与迭代闭环。
           </p>
-          <h2 id="works-title"><span>Selected Works</span></h2>
+          <h2 id="works-title"><span>精选作品</span></h2>
           <div id="gallery">
             <figure class="poster poster-dossier" data-hover>
               <div class="p-top mono-label">CASE FILE — 001</div>
               <div class="p-big">CR</div>
               <div class="p-lines"><i></i><i></i><i></i></div>
               <div class="p-foot mono-label">Proprietary and Confidential</div>
-              <figcaption class="mono-label">AI assistant, 0 → 1</figcaption>
+              <figcaption class="mono-label">AI 助手 · 从 0 到 1</figcaption>
             </figure>
             <figure class="poster poster-bill" data-hover>
               <div class="p-title">EVAL<br />KIT</div>
               <div class="p-credit mono-label">DESIGNED BY<br />CR</div>
               <div class="p-credit mono-label">PRODUCT LEAD<br />LLM EVALUATION</div>
-              <figcaption class="mono-label">Quality loop for LLM apps</figcaption>
+              <figcaption class="mono-label">LLM 应用的质量闭环</figcaption>
             </figure>
             <figure class="poster poster-night" data-hover>
               <div class="p-script">DreamFlow</div>
               <div class="p-credit mono-label">WRITTEN BY<br />USER RESEARCH</div>
-              <figcaption class="mono-label">Agent workflow concept</figcaption>
+              <figcaption class="mono-label">Agent 工作流概念</figcaption>
             </figure>
             <figure class="poster poster-script" data-hover>
               <div class="p-page mono-label">
@@ -114,14 +116,14 @@
                 prompt engineering required.<br /><br />
                 CUT TO: shipped.
               </div>
-              <figcaption class="mono-label">Docs that read like scripts</figcaption>
+              <figcaption class="mono-label">像剧本一样的 PRD</figcaption>
             </figure>
           </div>
         </section>
 
         <!-- Manifesto -->
         <section id="manifesto">
-          <div id="mani-tag" class="mono-label">CR<br />axis</div>
+          <div id="mani-tag" class="mono-label">cry<br />axis</div>
           <h2 id="mani-title" class="type-title-c">
             <span class="l1"></span>
             <span class="l2"></span>
@@ -134,17 +136,17 @@
         <section id="footer">
           <div id="foot-arrow">↓</div>
           <div id="foot-box" class="mono-para">
-            AI product manager helping teams turn ideas into<br />
-            products people love — from strategy and research<br />
-            to shipping and iteration
+            AI 产品经理，帮团队把想法<br />
+            变成被人喜爱的产品 ——<br />
+            从策略、调研到交付与迭代
           </div>
           <a id="cta" class="pill" href="mailto:cry765252871@gmail.com" data-hover>
-            <span>Get In Touch</span>
+            <span>联系我</span>
           </a>
           <div id="foot-row">
-            <div class="mono-label"><a href="#" data-hover>Privacy policy</a><a href="#" data-hover>Terms of use</a></div>
-            <canvas id="foot-logo" width="66" height="30"></canvas>
-            <div class="mono-label"><em>Designed &amp; built by</em> CR</div>
+            <div class="mono-label"><a href="#" data-hover>隐私政策</a><a href="#" data-hover>使用条款</a></div>
+            <canvas id="foot-logo" width="76" height="28"></canvas>
+            <div class="mono-label"><em>设计 · 开发</em> cry</div>
           </div>
         </section>
       </div>

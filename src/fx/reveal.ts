@@ -3,8 +3,10 @@ import { gsap } from '../core/scroll';
 /** Split [data-reveal-lines] into lines; reveal gray→white, staggered, on enter. */
 export function initLineReveals() {
   document.querySelectorAll<HTMLElement>('[data-reveal-lines]').forEach((el) => {
-    const words = (el.textContent ?? '').trim().split(/\s+/);
-    el.innerHTML = words.map((w) => `<span class="rw">${w}</span>`).join(' ');
+    // tokenize CJK per character, latin runs as whole words
+    const text = (el.textContent ?? '').trim().replace(/\s+/g, ' ');
+    const tokens = text.match(/[一-鿿　-〿，。—·]|[^\s一-鿿　-〿，。—·]+|\s/g) ?? [];
+    el.innerHTML = tokens.map((t) => (t === ' ' ? ' ' : `<span class="rw">${t}</span>`)).join('');
     const spans = el.querySelectorAll('.rw');
     gsap.fromTo(
       spans,
