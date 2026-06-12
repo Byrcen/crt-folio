@@ -226,6 +226,10 @@ body.no-native-cursor, body.no-native-cursor * { cursor: none !important; }
   right: 3.5vw;
   bottom: 24px;
 }
+#hud-comment, #hud-scroll, #hud-clock { transition: opacity 0.4s ease; }
+html[data-foot] #hud-comment,
+html[data-foot] #hud-scroll,
+html[data-foot] #hud-clock { opacity: 0; }
 .reg-dot {
   position: absolute;
   top: 10px;

@@ -1,5 +1,6 @@
 import './styles/main.css';
 import { initScroll, gsap, ScrollTrigger, lenis } from './core/scroll';
+import { sound, bindHoverSounds } from './core/sound';
 import { initCursor } from './core/cursor';
 import { initClock } from './core/clock';
 import { initLogo } from './core/logo';
@@ -31,7 +32,10 @@ initLogo(document.getElementById('foot-logo') as HTMLCanvasElement);
 let stage: Stage | null = null;
 try {
   stage = new Stage(document.getElementById('stage')!);
-  stage.onKnobClick(() => stage!.toggleTheme());
+  stage.onKnobClick(() => {
+    stage!.toggleTheme();
+    sound.play('switch');
+  });
   if (import.meta.env.DEV) {
     (window as unknown as { __stage: Stage }).__stage = stage;
     (window as unknown as { __ST: typeof ScrollTrigger }).__ST = ScrollTrigger;
@@ -43,27 +47,55 @@ try {
     'radial-gradient(80% 60% at 50% 40%, #adadad, #777)';
 }
 
-// sound toggle (visual only in v1)
+// sound toggle → synthesized WebAudio FX
 document.getElementById('sound-toggle')!.addEventListener('click', (e) => {
-  (e.currentTarget as HTMLElement).classList.toggle('on');
+  const btn = e.currentTarget as HTMLElement;
+  btn.classList.toggle('on');
+  sound.enable(btn.classList.contains('on'));
 });
+bindHoverSounds();
 
 // ---------- scroll choreography ----------
 function initScrollFx() {
-  // hero dolly-in
+  // hero dolly-in + directional snap: stopping mid-zoom commits the
+  // "channel change" in the direction you were scrolling
+  let snapTimer = 0;
   ScrollTrigger.create({
     trigger: '#hero-spacer',
     start: 'top top',
     end: 'bottom bottom',
-    onUpdate: (self) => stage?.setProgress(self.progress),
+    onUpdate: (self) => {
+      stage?.setProgress(self.progress);
+      clearTimeout(snapTimer);
+      if (self.progress > 0.01 && self.progress < 0.99) {
+        const target = self.direction > 0 ? self.end : self.start;
+        snapTimer = window.setTimeout(() => {
+          lenis.scrollTo(target, { duration: 1.1, easing: (t: number) => 1 - Math.pow(1 - t, 3) });
+        }, 220);
+      }
+    },
   });
 
   // NO SIGNAL at the 3D → DOM seam (both directions)
   ScrollTrigger.create({
     trigger: '#content',
     start: 'top bottom',
-    onEnter: () => playNoSignal(900),
-    onLeaveBack: () => playNoSignal(700),
+    onEnter: () => {
+      sound.play('static');
+      void playNoSignal(900);
+    },
+    onLeaveBack: () => {
+      sound.play('static');
+      void playNoSignal(700);
+    },
+  });
+
+  // bottom HUD (comment / scroll hint / clock) clears out over the footer
+  ScrollTrigger.create({
+    trigger: '#footer',
+    start: 'top 80%',
+    onEnter: () => document.documentElement.setAttribute('data-foot', '1'),
+    onLeaveBack: () => document.documentElement.removeAttribute('data-foot'),
   });
 
   // HUD goes light over dark content; stage pauses when covered
@@ -148,7 +180,8 @@ function initNav() {
       e.preventDefault();
       const target = document.querySelector(a.getAttribute('href')!);
       if (!target) return;
-      playNoSignal(1100);
+      sound.play('static');
+      void playNoSignal(1100);
       setTimeout(() => lenis.scrollTo(target as HTMLElement, { immediate: true }), 450);
     });
   });

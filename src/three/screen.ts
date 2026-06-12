@@ -42,8 +42,11 @@ export class ScreenFX {
   private last = 0;
 
   constructor() {
-    this.cv.width = W;
-    this.cv.height = H;
+    // render at 2x logical size so the dolly close-up stays crisp
+    const res = window.innerWidth < 768 ? 1.5 : 2;
+    this.cv.width = W * res;
+    this.cv.height = H * res;
+    this.ctx.scale(res, res);
     this.texture = new THREE.CanvasTexture(this.cv);
     this.texture.colorSpace = THREE.SRGBColorSpace;
     this.texture.anisotropy = 4;
@@ -72,7 +75,7 @@ export class ScreenFX {
     this.last = now;
     const c = this.ctx;
 
-    // bg + grid
+    // bg + grid (all coords are logical; ctx is pre-scaled)
     c.fillStyle = '#071512';
     c.fillRect(0, 0, W, H);
     c.strokeStyle = 'rgba(63,216,192,0.07)';
