@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en" data-theme="day" data-zone="hero">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CR — AI Product Manager</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300..700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Preloader -->
+    <div id="preloader">
+      <h1 id="pre-title" class="type-title"></h1>
+      <div id="pre-line"></div>
+    </div>
+
+    <!-- Fixed WebGL stage (hero) -->
+    <div id="stage"></div>
+
+    <!-- Hero DOM overlay: anchored labels -->
+    <div id="hero-overlay">
+      <div id="switch-label">
+        <svg id="switch-arrow" width="70" height="44" viewBox="0 0 70 44" fill="none">
+          <path d="M62 2 C 50 26, 30 36, 10 34" stroke="currentColor" stroke-width="1" />
+          <path d="M16 29 L 9 34 L 17 38" stroke="currentColor" stroke-width="1" fill="none" />
+        </svg>
+        <span class="mono-label">Switch Day 'N' Night</span>
+      </div>
+    </div>
+
+    <!-- Fixed HUD -->
+    <header id="hud">
+      <nav id="hud-nav">
+        <a href="#about" data-hover data-scramble>About me</a>
+        <a href="#works" data-hover data-scramble>Works</a>
+        <a href="#footer" data-hover data-scramble>Contact</a>
+      </nav>
+      <canvas id="hud-logo" width="66" height="30" data-hover></canvas>
+      <div id="hud-right">
+        <span class="mono-label">Sound</span>
+        <button id="sound-toggle" data-hover aria-label="toggle sound"><i></i></button>
+      </div>
+      <div id="hud-comment" class="mono-label">// Positioned at the axis of AI and product across strategy</div>
+      <div id="hud-scroll" class="mono-label">Scroll Down <b>■</b></div>
+      <div id="hud-clock" class="mono-label">00 : 00 am</div>
+      <i class="reg-dot" style="left: 25%"></i>
+      <i class="reg-dot" style="left: 75%"></i>
+    </header>
+
+    <!-- Scroll content -->
+    <main>
+      <div id="hero-spacer"></div>
+
+      <div id="content">
+        <!-- About / positioning -->
+        <section id="about">
+          <canvas id="snake"></canvas>
+          <h2 id="about-title" class="type-title"></h2>
+          <ul id="steps">
+            <li><span>(1)</span> Discover</li>
+            <li><span>(2)</span> Define</li>
+            <li><span>(3)</span> Build</li>
+            <li><span>(4)</span> Ship</li>
+          </ul>
+          <div id="about-para" class="mono-para" data-reveal-lines>
+            I'm CR — an AI product manager turning fuzzy ideas into shipped
+            products. By pairing user research with a hands-on grasp of LLMs,
+            evals and data, I help teams find what matters and build it right.
+          </div>
+          <div id="about-sub">
+            <em>1 goal</em>
+            <span>to ship AI products people actually need</span>
+          </div>
+          <div id="about-hint" class="mono-label">Scroll Down</div>
+        </section>
+
+        <!-- Works gallery -->
+        <section id="works">
+          <p id="works-intro" class="mono-para" data-reveal-lines>
+            Positioned at the axis of AI and product across strategy, research,
+            shipping and beyond. I design AI products end-to-end — from problem
+            framing and prompt systems to evaluation and iteration loops.
+          </p>
+          <h2 id="works-title"><span>Selected Works</span></h2>
+          <div id="gallery">
+            <figure class="poster poster-dossier" data-hover>
+              <div class="p-top mono-label">CASE FILE — 001</div>
+              <div class="p-big">CR</div>
+              <div class="p-lines"><i></i><i></i><i></i></div>
+              <div class="p-foot mono-label">Proprietary and Confidential</div>
+              <figcaption class="mono-label">AI assistant, 0 → 1</figcaption>
+            </figure>
+            <figure class="poster poster-bill" data-hover>
+              <div class="p-title">EVAL<br />KIT</div>
+              <div class="p-credit mono-label">DESIGNED BY<br />CR</div>
+              <div class="p-credit mono-label">PRODUCT LEAD<br />LLM EVALUATION</div>
+              <figcaption class="mono-label">Quality loop for LLM apps</figcaption>
+            </figure>
+            <figure class="poster poster-night" data-hover>
+              <div class="p-script">DreamFlow</div>
+              <div class="p-credit mono-label">WRITTEN BY<br />USER RESEARCH</div>
+              <figcaption class="mono-label">Agent workflow concept</figcaption>
+            </figure>
+            <figure class="poster poster-script" data-hover>
+              <div class="p-page mono-label">
+                PRD — draft 07<br /><br />
+                FADE IN:<br /><br />
+                A user opens the app. The model
+                already knows the context. No
+                prompt engineering required.<br /><br />
+                CUT TO: shipped.
+              </div>
+              <figcaption class="mono-label">Docs that read like scripts</figcaption>
+            </figure>
+          </div>
+        </section>
+
+        <!-- Manifesto -->
+        <section id="manifesto">
+          <div id="mani-tag" class="mono-label">CR<br />axis</div>
+          <h2 id="mani-title" class="type-title-c">
+            <span class="l1"></span>
+            <span class="l2"></span>
+            <span id="mani-echo" aria-hidden="true"></span>
+          </h2>
+          <div id="big-circle"><i></i></div>
+        </section>
+
+        <!-- Footer -->
+        <section id="footer">
+          <div id="foot-arrow">↓</div>
+          <div id="foot-box" class="mono-para">
+            AI product manager helping teams turn ideas into<br />
+            products people love — from strategy and research<br />
+            to shipping and iteration
+          </div>
+          <a id="cta" class="pill" href="mailto:cry765252871@gmail.com" data-hover>
+            <span>Get In Touch</span>
+          </a>
+          <div id="foot-row">
+            <div class="mono-label"><a href="#" data-hover>Privacy policy</a><a href="#" data-hover>Terms of use</a></div>
+            <canvas id="foot-logo" width="66" height="30"></canvas>
+            <div class="mono-label"><em>Designed &amp; built by</em> CR</div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- NO SIGNAL transition -->
+    <canvas id="nosignal"></canvas>
+
+    <!-- film grain + frame -->
+    <div id="grain"></div>
+    <div id="crt-frame"></div>
+
+    <!-- custom cursor -->
+    <div id="cursor"><i></i><i></i><i></i><i></i><b></b></div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
