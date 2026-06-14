@@ -348,73 +348,191 @@ section { position: relative; overflow: hidden; }
   aspect-ratio: 0.72;
   flex: none;
   will-change: transform;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow: hidden;
+  text-decoration: none;
+  border: 1px solid #242424;
+  transition: filter 0.35s ease;
 }
-.poster { transition: filter 0.35s ease; }
 .poster:hover { filter: brightness(1.12); }
-.poster figcaption {
+.poster .p-top { letter-spacing: 0.1em; opacity: 0.85; position: relative; z-index: 2; }
+.poster .p-no {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  opacity: 0.4;
+  z-index: 2;
+}
+.poster .p-title-zh {
+  font-family: var(--font-d);
+  font-weight: 600;
+  font-size: clamp(26px, 3vw, 46px);
+  line-height: 0.98;
+  letter-spacing: 0.04em;
+  margin-top: auto;
+  position: relative;
+  z-index: 2;
+}
+.poster .p-en {
+  letter-spacing: 0.18em;
+  margin-top: 9px;
+  opacity: 0.62;
+  position: relative;
+  z-index: 2;
+}
+.poster .p-foot { margin-top: 11px; opacity: 0.55; position: relative; z-index: 2; }
+.poster .cap {
   position: absolute;
   top: calc(100% + 12px);
   left: 0;
   color: var(--ink-dim);
+  white-space: nowrap;
 }
-.poster-dossier {
-  background: #121212;
-  border: 1px solid #242424;
-  padding: 18px;
+.poster .p-view {
+  position: absolute;
+  left: 20px;
+  bottom: 18px;
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity 0.3s ease, transform 0.3s ease;
+  z-index: 3;
+}
+.poster:hover .p-view { opacity: 0.95; transform: translateY(0); }
+.poster:hover .p-foot { opacity: 0; }
+
+/* 01 · 暗日地下城 — sci-fi survival, dark sun eclipse */
+.p-dungeon {
+  background: radial-gradient(120% 80% at 50% 32%, #14181c 0%, #050607 76%);
+  border-color: #1b2227;
+  color: #cdd6da;
+}
+.p-dungeon .p-top { color: #e8a23d; }
+.p-dungeon .p-sun {
+  position: absolute;
+  top: 33%;
+  left: 50%;
+  width: 46%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: #050607;
+  box-shadow: 0 0 0 2px rgba(232, 162, 61, 0.35), 0 0 42px 8px rgba(232, 162, 61, 0.22),
+    inset 0 0 28px #000;
+}
+.p-dungeon .p-sun::after {
+  content: '';
+  position: absolute;
+  inset: -9px;
+  border-radius: 50%;
+  border: 1px solid rgba(232, 162, 61, 0.22);
+}
+.p-dungeon .p-title-zh { color: #eef3f5; }
+.p-dungeon .p-en { color: #7f9aa6; }
+
+/* 02 · 拼豆 — perler bead pegboard (the bright outlier) */
+.p-beads {
+  background: #ece6da;
+  border-color: #d8cfbe;
+  color: #23201b;
+}
+.p-beads .p-top { color: #a05a3a; }
+.p-beads .p-no { color: #6b6253; }
+.p-beads .p-beadgrid {
+  position: absolute;
+  top: 16%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 62%;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 5px;
+}
+.p-beads .p-beadgrid i {
+  aspect-ratio: 1;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.14);
+}
+.p-beads .p-beadgrid i.off {
+  background: #ddd5c6;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+}
+.p-beads .p-title-zh { color: #23201b; }
+.p-beads .p-en { color: #6b6253; }
+
+/* 03 · 血与火 — Targaryen fire & blood */
+.p-fire {
+  background: linear-gradient(180deg, #0a0506 0%, #1a0708 54%, #4a0f10 100%);
+  border-color: #2a1011;
+  color: #f0d8cf;
+}
+.p-fire .p-top { color: #d98b3a; letter-spacing: 0.16em; }
+.p-fire .p-no { color: #c98a6a; }
+.p-fire .p-emblem {
+  position: absolute;
+  top: 26%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 4.4vw;
+  color: #e8632a;
+  text-shadow: 0 0 24px rgba(255, 106, 40, 0.5);
+  opacity: 0.9;
+}
+.p-fire .p-title-zh {
+  background: linear-gradient(180deg, #ffd9a0, #e8632a 55%, #b01f1f);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.p-fire .p-en { color: #c98a6a; }
+.p-fire::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 42%;
+  background: radial-gradient(80% 100% at 50% 120%, rgba(255, 106, 40, 0.32) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* 04 · 浴血黑帮 — noir dossier */
+.p-peaky {
+  background: #15130f;
+  border-color: #2a2620;
+  color: #cabfa8;
+}
+.p-peaky .p-top { color: #9a8e74; }
+.p-peaky .p-no { color: #6f6552; }
+.p-peaky .p-stamp {
+  position: absolute;
+  top: 19%;
+  right: 12%;
+  transform: rotate(-12deg);
+  border: 2px solid #b23b32;
+  color: #b23b32;
+  padding: 3px 9px;
+  font-family: var(--font-m);
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  border-radius: 2px;
+  opacity: 0.85;
+}
+.p-peaky .p-redact {
+  position: absolute;
+  top: 42%;
+  left: 20px;
+  right: 20px;
   display: flex;
   flex-direction: column;
+  gap: 7px;
 }
-.poster-dossier .p-top { color: #6a6a6a; }
-.poster-dossier .p-big {
-  font-family: var(--font-d);
-  font-weight: 600;
-  font-size: 5.4vw;
-  color: #e6e6e6;
-  margin: auto 0;
-}
-.poster-dossier .p-lines i {
-  display: block;
-  height: 1px;
-  background: #2e2e2e;
-  margin: 10px 0;
-}
-.poster-dossier .p-foot { color: #5a5a5a; }
-.poster-bill {
-  background: #e9e6df;
-  color: #111;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-}
-.poster-bill .p-title {
-  font-family: var(--font-d);
-  font-weight: 700;
-  font-size: 3.6vw;
-  line-height: 0.96;
-  letter-spacing: -0.02em;
-}
-.poster-bill .p-credit { color: #444; margin-top: auto; }
-.poster-bill .p-credit + .p-credit { margin-top: 12px; }
-.poster-night {
-  background: radial-gradient(120% 90% at 50% 20%, #1d2330 0%, #0b0d12 70%);
-  border: 1px solid #1c1f27;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-}
-.poster-night .p-script {
-  font-family: 'Snell Roundhand', 'Brush Script MT', cursive;
-  font-size: 2.6vw;
-  color: #cfd6e4;
-  margin: 34% auto 0;
-}
-.poster-night .p-credit { color: #5d6573; margin-top: auto; }
-.poster-script {
-  background: #f4f2ec;
-  color: #222;
-  padding: 22px;
-}
-.poster-script .p-page { color: #333; font-size: 10.5px; }
+.p-peaky .p-redact i { height: 9px; background: #000; }
+.p-peaky .p-redact i:nth-child(1) { width: 72%; }
+.p-peaky .p-redact i:nth-child(2) { width: 46%; }
+.p-peaky .p-title-zh { color: #e9dfc8; }
+.p-peaky .p-en { color: #8a7d64; }
 
 /* ---------- manifesto ---------- */
 #manifesto {

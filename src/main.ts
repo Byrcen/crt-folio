@@ -19,11 +19,13 @@ import {
   initManifestoEcho,
 } from './fx/reveal';
 import { initAboutPage } from './about';
+import { renderGallery } from './gallery';
 import { COPY } from './content';
 import type { Stage } from './three/stage';
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+renderGallery(); // build posters before cursor/sound bind [data-hover]
 initScroll();
 initCursor();
 initClock();
