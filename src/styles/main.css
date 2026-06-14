@@ -341,12 +341,15 @@ section { position: relative; overflow: hidden; }
   align-items: flex-start;
   perspective: 1100px;
 }
-.poster {
-  position: relative;
+.work {
   width: 21vw;
   min-width: 200px;
-  aspect-ratio: 0.72;
   flex: none;
+}
+.poster {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 0.72;
   will-change: transform;
   display: flex;
   flex-direction: column;
@@ -383,12 +386,11 @@ section { position: relative; overflow: hidden; }
   z-index: 2;
 }
 .poster .p-foot { margin-top: 11px; opacity: 0.55; position: relative; z-index: 2; }
-.poster .cap {
-  position: absolute;
-  top: calc(100% + 12px);
-  left: 0;
-  color: var(--ink-dim);
-  white-space: nowrap;
+.work .cap {
+  display: block;
+  margin-top: 14px;
+  color: var(--ink-mid);
+  line-height: 1.6;
 }
 .poster .p-view {
   position: absolute;
@@ -878,5 +880,5 @@ body.cursor-hidden #cursor { opacity: 0; }
   #steps { position: relative; top: 0; right: 0; margin-top: 6vh; }
   #steps li, #steps li:nth-child(n) { transform: none; margin-bottom: 3vh; }
   #gallery { flex-wrap: wrap; }
-  .poster { width: 70vw; margin-bottom: 14vw; }
+  .work { width: 70vw; margin-bottom: 14vw; }
 }

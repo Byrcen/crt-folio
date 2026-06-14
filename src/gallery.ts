@@ -45,17 +45,20 @@ function decor(p: Project): string {
 
 function posterHTML(p: Project): string {
   const viewLabel = p.live ? '在线体验 ↗' : '查看源码 ↗';
+  const aria = `${p.title.replace(/<br>/g, '')} — ${p.cap}`;
   return `
-    <a class="poster p-${p.theme}" href="${p.href}" target="_blank" rel="noopener noreferrer" data-hover aria-label="${p.title.replace(/<br>/g, '')} — ${p.cap}">
-      <div class="p-top mono-label">${p.top}</div>
-      ${decor(p)}
-      <div class="p-no mono-label">${p.no}</div>
-      <div class="p-title-zh">${p.title}</div>
-      <div class="p-en mono-label">${p.en}</div>
-      <div class="p-foot mono-label">${p.foot}</div>
-      <span class="p-view mono-label">${viewLabel}</span>
-      <span class="cap mono-label">${p.cap}</span>
-    </a>`;
+    <figure class="work">
+      <a class="poster p-${p.theme}" href="${p.href}" target="_blank" rel="noopener noreferrer" data-hover aria-label="${aria}">
+        <div class="p-top mono-label">${p.top}</div>
+        ${decor(p)}
+        <div class="p-no mono-label">${p.no}</div>
+        <div class="p-title-zh">${p.title}</div>
+        <div class="p-en mono-label">${p.en}</div>
+        <div class="p-foot mono-label">${p.foot}</div>
+        <span class="p-view mono-label">${viewLabel}</span>
+      </a>
+      <figcaption class="cap mono-label">${p.cap}</figcaption>
+    </figure>`;
 }
 
 /** Render the four project posters into #gallery. Call before velocity-skew init. */
