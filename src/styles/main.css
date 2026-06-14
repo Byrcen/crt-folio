@@ -316,8 +316,14 @@ section { position: relative; overflow: hidden; }
 
 /* ---------- works ---------- */
 #works {
-  min-height: 110vh;
-  padding: 10vh 3.5vw 14vh;
+  position: relative;
+  padding: 10vh 0 0;
+}
+.works-head {
+  position: relative;
+  padding: 0 3.5vw;
+  display: flex;
+  flex-direction: column;
 }
 #works-intro {
   max-width: 520px;
@@ -326,6 +332,7 @@ section { position: relative; overflow: hidden; }
 }
 #works-title {
   display: inline-block;
+  align-self: flex-start;
   border: 1px solid var(--hairline);
   padding: 0.06em 0.25em;
   font-family: var(--font-d);
@@ -333,17 +340,30 @@ section { position: relative; overflow: hidden; }
   font-size: clamp(40px, 7.4vw, 110px);
   letter-spacing: -0.01em;
   color: #f2f2f2;
-  margin-bottom: 9vh;
+}
+#works-counter {
+  align-self: flex-end;
+  margin-top: 18px;
+  color: var(--ink-dim);
+  letter-spacing: 0.16em;
+}
+/* horizontal scroll gallery: pinned stage, track pans on scroll */
+#gallery-pin {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
 }
 #gallery {
   display: flex;
-  gap: 3.4vw;
-  align-items: flex-start;
-  perspective: 1100px;
+  align-items: center;
+  gap: 7vw;
+  padding: 0 37vw;
+  will-change: transform;
 }
 .work {
-  width: 21vw;
-  min-width: 200px;
+  width: 26vw;
+  min-width: 240px;
   flex: none;
 }
 .poster {
@@ -357,9 +377,8 @@ section { position: relative; overflow: hidden; }
   overflow: hidden;
   text-decoration: none;
   border: 1px solid #242424;
-  transition: filter 0.35s ease;
+  backface-visibility: hidden;
 }
-.poster:hover { filter: brightness(1.12); }
 .poster .p-top { letter-spacing: 0.1em; opacity: 0.85; position: relative; z-index: 2; }
 .poster .p-no {
   position: absolute;
@@ -879,6 +898,15 @@ body.cursor-hidden #cursor { opacity: 0; }
   #about-title { max-width: 96%; }
   #steps { position: relative; top: 0; right: 0; margin-top: 6vh; }
   #steps li, #steps li:nth-child(n) { transform: none; margin-bottom: 3vh; }
-  #gallery { flex-wrap: wrap; }
-  .work { width: 70vw; margin-bottom: 14vw; }
+  /* no pin on mobile — stack vertically */
+  #gallery-pin { height: auto; display: block; overflow: visible; }
+  #gallery {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12vw;
+    padding: 8vh 3.5vw 14vh;
+    transform: none !important;
+  }
+  .work { width: 80vw; margin: 0 auto; }
+  .poster { transform: none !important; filter: none !important; }
 }
