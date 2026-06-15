@@ -1,16 +1,18 @@
 import { gsap } from '../core/scroll';
 
 /**
- * Horizontal scroll gallery: the #works section pins, vertical scroll pans the
- * #gallery track sideways. The poster nearest viewport-center straightens,
- * scales up and brightens; posters to the sides tilt away, shrink and dim.
- * Falls back to a static vertical stack on mobile / reduced-motion.
+ * Desktop works gallery: drag horizontally (mouse / trackpad) to browse.
+ * Pointer-drag with release inertia, horizontal-wheel support, and a
+ * center-focus effect (the poster nearest viewport-center straightens,
+ * scales up and brightens; the others tilt away, shrink and dim).
+ * Mobile / reduced-motion fall back to the CSS vertical stack.
  */
-export function initGalleryPan() {
+export function initGalleryDrag() {
+  const viewport = document.getElementById('gallery-pin');
   const track = document.getElementById('gallery');
-  const pin = document.getElementById('gallery-pin');
   const counter = document.getElementById('works-counter');
-  if (!track || !pin) return;
+  const hint = document.getElementById('drag-hint');
+  if (!viewport || !track) return;
 
   const posters = gsap.utils.toArray<HTMLElement>('.poster');
   const caps = gsap.utils.toArray<HTMLElement>('.work .cap');
@@ -20,13 +22,22 @@ export function initGalleryPan() {
   const isMobile = window.matchMedia('(max-width: 768px)').matches;
   if (reduced || isMobile) return; // CSS handles the stacked layout
 
-  const panDistance = () => Math.max(0, track.scrollWidth - window.innerWidth);
+  let x = 0;
+  let vx = 0;
+  let dragging = false;
+  let startPX = 0;
+  let startX = 0;
+  let lastPX = 0;
+  let moved = 0;
+  let raf = 0;
 
-  // focus shaping: how each poster reacts to its distance from screen-center
+  const minX = () => Math.min(0, viewport.clientWidth - track.scrollWidth);
+  const clamp = (v: number) => Math.max(minX(), Math.min(0, v));
+
   const focus = () => {
     const vc = window.innerWidth / 2;
     let nearest = 0;
-    let nearestD = Infinity;
+    let nd = Infinity;
     posters.forEach((p, i) => {
       const r = p.getBoundingClientRect();
       const pc = r.left + r.width / 2;
@@ -41,8 +52,8 @@ export function initGalleryPan() {
         z: -a * 120,
       });
       if (caps[i]) gsap.set(caps[i], { opacity: 1 - a * 0.75 });
-      if (a < nearestD) {
-        nearestD = a;
+      if (a < nd) {
+        nd = a;
         nearest = i;
       }
     });
@@ -51,19 +62,100 @@ export function initGalleryPan() {
     }
   };
 
-  gsap.to(track, {
-    x: () => -panDistance(),
-    ease: 'none',
-    scrollTrigger: {
-      trigger: pin,
-      start: 'top top',
-      end: () => '+=' + panDistance(),
-      pin: true,
-      scrub: 1,
-      invalidateOnRefresh: true,
-      onRefresh: focus,
-      onUpdate: focus,
-    },
+  const render = () => {
+    gsap.set(track, { x });
+    focus();
+  };
+
+  const loop = () => {
+    if (!dragging) {
+      x = clamp(x + vx);
+      vx *= 0.9;
+      if (Math.abs(vx) < 0.12 || x === clamp(x + vx * 2)) {
+        vx = 0;
+        render();
+        raf = 0;
+        return;
+      }
+    }
+    render();
+    raf = requestAnimationFrame(loop);
+  };
+  const kick = () => {
+    if (!raf) raf = requestAnimationFrame(loop);
+  };
+
+  const dismissHint = () => {
+    if (hint) gsap.to(hint, { opacity: 0, duration: 0.4, onComplete: () => hint.remove() });
+  };
+
+  viewport.addEventListener('pointerdown', (e) => {
+    dragging = true;
+    moved = 0;
+    startPX = e.clientX;
+    lastPX = e.clientX;
+    startX = x;
+    vx = 0;
+    viewport.classList.add('grabbing');
+    try {
+      viewport.setPointerCapture(e.pointerId);
+    } catch {
+      /* synthetic / already-released pointer */
+    }
+    dismissHint();
+    kick();
   });
-  focus();
+
+  viewport.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - startPX;
+    moved = Math.max(moved, Math.abs(dx));
+    x = clamp(startX + dx);
+    vx = e.clientX - lastPX;
+    lastPX = e.clientX;
+  });
+
+  const end = (e: PointerEvent) => {
+    if (!dragging) return;
+    dragging = false;
+    viewport.classList.remove('grabbing');
+    try {
+      viewport.releasePointerCapture(e.pointerId);
+    } catch {
+      /* pointer already released */
+    }
+    kick();
+  };
+  viewport.addEventListener('pointerup', end);
+  viewport.addEventListener('pointercancel', end);
+
+  // horizontal trackpad / shift-wheel pans; vertical wheel scrolls the page
+  viewport.addEventListener(
+    'wheel',
+    (e) => {
+      const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
+      if (!dx) return;
+      e.preventDefault();
+      x = clamp(x - dx);
+      vx = 0;
+      dismissHint();
+      kick();
+    },
+    { passive: false },
+  );
+
+  // a drag shouldn't trigger the poster's link
+  posters.forEach((p) =>
+    p.addEventListener('click', (e) => {
+      if (moved > 6) e.preventDefault();
+    }),
+  );
+  track.addEventListener('dragstart', (e) => e.preventDefault());
+
+  window.addEventListener('resize', () => {
+    x = clamp(x);
+    render();
+  });
+
+  render();
 }

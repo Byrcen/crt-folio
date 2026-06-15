@@ -9,7 +9,7 @@ import { playNoSignal } from './fx/nosignal';
 import { domTypeLoop, typeOnce } from './fx/typewriter';
 import { bindScrambleHover } from './fx/scramble';
 import { initSnake } from './fx/snake';
-import { initGalleryPan } from './fx/skew';
+import { initGalleryDrag } from './fx/skew';
 import {
   initLineReveals,
   initPillReveals,
@@ -217,7 +217,7 @@ function initScrollFx() {
   initSteps();
   initLineReveals();
   initWorksTitle();
-  initGalleryPan();
+  initGalleryDrag();
   initFootBox();
   initPillReveals();
 }
