@@ -17,6 +17,9 @@ export function initGalleryDrag() {
 
   const posters = gsap.utils.toArray<HTMLElement>('.poster');
   const caps = gsap.utils.toArray<HTMLElement>('.work .cap');
+  // 源码 link beneath each poster (only live projects have one) — kept aligned
+  // to `posters` by index so it dims with its caption in focus().
+  const srcs = posters.map((p) => p.parentElement?.querySelector<HTMLElement>('.p-src') ?? null);
   const total = posters.length;
 
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -54,6 +57,7 @@ export function initGalleryDrag() {
         z: -a * 120,
       });
       if (caps[i]) gsap.set(caps[i], { opacity: 1 - a * 0.75 });
+      if (srcs[i]) gsap.set(srcs[i], { opacity: 1 - a * 0.75 });
       if (a < nd) {
         nd = a;
         nearest = i;
@@ -113,6 +117,7 @@ export function initGalleryDrag() {
   };
 
   viewport.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return; // left button only — let right-click reach the menu
     snapTween?.kill();
     dragging = true;
     moved = 0;
@@ -121,16 +126,16 @@ export function initGalleryDrag() {
     startX = x;
     vx = 0;
     viewport.classList.add('grabbing');
-    try {
-      viewport.setPointerCapture(e.pointerId);
-    } catch {
-      /* synthetic / already-released pointer */
-    }
     dismissHint();
     kick();
   });
 
-  viewport.addEventListener('pointermove', (e) => {
+  // Track the drag on `window` rather than calling setPointerCapture on the
+  // viewport: capturing the pointer retargets the synthesized `click` to the
+  // capturing element, so a poster's <a> never receives the click and its link
+  // never opens. Window listeners keep the drag tracking outside the gallery
+  // (the reason capture was used) while leaving native link clicks intact.
+  window.addEventListener('pointermove', (e) => {
     if (!dragging) return;
     const dx = e.clientX - startPX;
     moved = Math.max(moved, Math.abs(dx));
@@ -139,19 +144,14 @@ export function initGalleryDrag() {
     lastPX = e.clientX;
   });
 
-  const end = (e: PointerEvent) => {
+  const end = () => {
     if (!dragging) return;
     dragging = false;
     viewport.classList.remove('grabbing');
-    try {
-      viewport.releasePointerCapture(e.pointerId);
-    } catch {
-      /* pointer already released */
-    }
     kick();
   };
-  viewport.addEventListener('pointerup', end);
-  viewport.addEventListener('pointercancel', end);
+  window.addEventListener('pointerup', end);
+  window.addEventListener('pointercancel', end);
 
   // horizontal trackpad / shift-wheel pans; vertical wheel scrolls the page.
   // pan freely while the wheel is active, then snap once it goes idle.
@@ -172,10 +172,13 @@ export function initGalleryDrag() {
     { passive: false },
   );
 
-  // a drag shouldn't trigger the poster's link
-  posters.forEach((p) =>
-    p.addEventListener('click', (e) => {
-      if (moved > 6) e.preventDefault();
+  // a drag shouldn't trigger any gallery link — the poster itself or the 源码
+  // link beneath it. Only suppress pointer clicks (e.detail > 0); keyboard
+  // activation (Enter, e.detail === 0) must always follow the link, even right
+  // after a drag left `moved` elevated.
+  gsap.utils.toArray<HTMLElement>('#gallery a').forEach((a) =>
+    a.addEventListener('click', (e) => {
+      if (e.detail > 0 && moved > 6) e.preventDefault();
     }),
   );
   track.addEventListener('dragstart', (e) => e.preventDefault());

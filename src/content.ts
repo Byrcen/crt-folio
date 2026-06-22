@@ -38,6 +38,7 @@ export interface Project {
   cap: string; // 海报下方说明
   href: string;
   live: boolean; // true=在线体验，false=仅源码
+  repo: string; // GitHub 源码仓库
 }
 
 /** 精选作品 — 渲染为四张主题化"海报"，由 src/gallery.ts 输出 */
@@ -52,6 +53,7 @@ export const PROJECTS: Project[] = [
     cap: '用 5 分钟一局验证心流 —— 最小可玩闭环里跑通生存·建造·通关',
     href: 'https://dark-sun-dungeon.vercel.app',
     live: true,
+    repo: 'https://github.com/Byrcen/dark-sun-dungeon',
   },
   {
     theme: 'beads',
@@ -63,6 +65,7 @@ export const PROJECTS: Project[] = [
     cap: 'vibecoding 伴侣 —— 抓取 Claude Code 进程，把等 AI 的空窗变成连贯专注',
     href: 'https://github.com/Byrcen/pinbeads',
     live: false,
+    repo: 'https://github.com/Byrcen/pinbeads',
   },
   {
     theme: 'fire',
@@ -74,6 +77,7 @@ export const PROJECTS: Project[] = [
     cap: '把三百年家族史重构成可逛的像素长卷，用渐进叙事降低理解门槛',
     href: 'https://fire-and-blood.vercel.app',
     live: true,
+    repo: 'https://github.com/Byrcen/fire-and-blood',
   },
   {
     theme: 'peaky',
@@ -85,5 +89,6 @@ export const PROJECTS: Project[] = [
     cap: '把六季线性剧情拆成可探索的卷宗 —— 红线关系板里自己拼出全貌',
     href: 'https://peaky-dossier.vercel.app',
     live: true,
+    repo: 'https://github.com/Byrcen/peaky-dossier',
   },
 ];

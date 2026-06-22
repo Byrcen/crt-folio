@@ -459,6 +459,14 @@ section { position: relative; overflow: hidden; }
   color: var(--ink-mid);
   line-height: 1.6;
 }
+.work .p-src {
+  display: inline-block;
+  margin-top: 9px;
+  color: var(--ink-dim);
+  text-decoration: none;
+  transition: color 0.25s ease;
+}
+.work .p-src:hover { color: var(--ink); }
 .poster .p-view {
   position: absolute;
   left: 20px;
