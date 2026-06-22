@@ -114,8 +114,12 @@ function initNav() {
 
 // ---------- scroll choreography (home) ----------
 function initScrollFx() {
-  // hero dolly-in + directional snap: stopping mid-zoom commits the
-  // "channel change" in the direction you were scrolling
+  const heroHeadline = document.getElementById('hero-headline')!;
+
+  // hero dolly-in + gentle end-snap: resting mid-zoom is allowed, but once
+  // you've clearly leaned toward an end the dolly finishes the "channel
+  // change" on its own. A small flick no longer flings you across the spacer,
+  // and any further scroll input interrupts the snap.
   let snapTimer = 0;
   ScrollTrigger.create({
     trigger: '#hero-spacer',
@@ -123,13 +127,17 @@ function initScrollFx() {
     end: 'bottom bottom',
     onUpdate: (self) => {
       stage?.setProgress(self.progress);
+      heroHeadline.style.opacity = String(Math.max(0, 1 - self.progress / 0.32));
       clearTimeout(snapTimer);
-      if (currentPage === 'home' && self.progress > 0.01 && self.progress < 0.99) {
-        const target = self.direction > 0 ? self.end : self.start;
-        snapTimer = window.setTimeout(() => {
-          lenis.scrollTo(target, { duration: 1.1, easing: (t: number) => 1 - Math.pow(1 - t, 3) });
-        }, 220);
-      }
+      if (currentPage !== 'home') return;
+      const p = self.progress;
+      let target: number | null = null;
+      if (p > 0.6) target = self.end; // past the midpoint, diving in → finish it
+      else if (p > 0 && p < 0.15) target = self.start; // barely in → ease back to rest
+      if (target === null) return; // 0.15–0.6 is a free rest zone
+      snapTimer = window.setTimeout(() => {
+        lenis.scrollTo(target!, { duration: 1.1, easing: (t: number) => 1 - Math.pow(1 - t, 3) });
+      }, 320);
     },
   });
 

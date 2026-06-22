@@ -27,15 +27,15 @@ export function initLogo(canvas: HTMLCanvasElement) {
     ctx.fillStyle = color();
     const mode = Math.random();
     const ox = (canvas.width - cols * cell) / 2;
-    if (mode < 0.55) {
-      // full monogram
+    if (mode < 0.82) {
+      // full monogram — the brand mark should read clearly most of the time
       for (const [x, y] of pixels) ctx.fillRect(ox + x * cell, y * cell, cell - 1, cell - 1);
-    } else if (mode < 0.75) {
+    } else if (mode < 0.9) {
       // sparse dot cloud
       for (const [x, y] of pixels) {
-        if (Math.random() < 0.45) ctx.fillRect(ox + x * cell, y * cell, cell - 1, cell - 1);
+        if (Math.random() < 0.55) ctx.fillRect(ox + x * cell, y * cell, cell - 1, cell - 1);
       }
-    } else if (mode < 0.9) {
+    } else if (mode < 0.96) {
       // scrambled characters
       ctx.font = '700 20px "JetBrains Mono", monospace';
       ctx.textBaseline = 'top';
@@ -50,7 +50,7 @@ export function initLogo(canvas: HTMLCanvasElement) {
       ctx.clearRect(0, bandY * cell, canvas.width, cell);
       ctx.putImageData(slice, (Math.random() * 10 - 5) | 0, bandY * cell);
     }
-    setTimeout(draw, 500 + Math.random() * 600);
+    setTimeout(draw, 680 + Math.random() * 760);
   };
   draw();
 }

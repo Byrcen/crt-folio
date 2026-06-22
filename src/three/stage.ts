@@ -7,13 +7,13 @@ type Theme = 'day' | 'night';
 
 const THEMES = {
   day: {
-    wall: 0x9a9a9a,
-    shelfTop: 0xa2a2a2,
-    shelfFront: 0x7e7e7e,
-    ambient: 1.15,
-    key: 0.85,
-    spot: 0.25,
-    halo: 0.35,
+    wall: 0xa6a097, // warm light grey — less clinical than flat neutral
+    shelfTop: 0xaaa498,
+    shelfFront: 0x837c6f,
+    ambient: 1.0, // a touch less fill so the key light can model the form
+    key: 0.95,
+    spot: 0.4, // a soft pool of light on the TV even by day
+    halo: 0.4,
   },
   night: {
     wall: 0x232323,
@@ -139,6 +139,14 @@ export class Stage {
       if (hit === 'knob') this.onKnob?.();
     });
 
+    // restore the visitor's last day/night choice (no transition on boot)
+    try {
+      const saved = localStorage.getItem('crt-theme');
+      if (saved === 'day' || saved === 'night') this.setTheme(saved, false);
+    } catch {
+      /* private mode / storage disabled */
+    }
+
     this.renderer.setAnimationLoop((t) => this.tick(t));
   }
 
@@ -171,6 +179,11 @@ export class Stage {
   setTheme(t: Theme, animate = true) {
     this.theme = t;
     document.documentElement.dataset.theme = t;
+    try {
+      localStorage.setItem('crt-theme', t);
+    } catch {
+      /* private mode / storage disabled */
+    }
     const T = THEMES[t];
     const dur = animate ? 0.55 : 0;
     const lerpColor = (mat: THREE.MeshStandardMaterial, hex: number, d: number, delay: number) => {

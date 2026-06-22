@@ -3,7 +3,7 @@
   --bg-dark: #0a0a0a;
   --ink: #ededed;
   --ink-mid: #8a8a8a;
-  --ink-dim: #4a4a4a;
+  --ink-dim: #6a6a6a; /* ≥3:1 on the near-black bg for info-bearing labels */
   --hairline: #2a2a2a;
   --teal: #3fd8c0;
   --font-d: 'Space Grotesk', 'Noto Sans SC', sans-serif;
@@ -135,6 +135,37 @@ body.no-native-cursor, body.no-native-cursor * { cursor: none !important; }
   bottom: calc(100% + 4px);
 }
 #switch-label .mono-label { white-space: nowrap; }
+
+/* hero value statement — legible at rest, fades out as the dolly dives in */
+#hero-headline {
+  position: absolute;
+  left: 50%;
+  top: 19vh;
+  transform: translateX(-50%);
+  width: max-content;
+  max-width: 92vw;
+  text-align: center;
+  color: var(--hud);
+  transition: color 0.65s ease-in-out;
+  will-change: opacity;
+}
+#hero-headline .hh-tag {
+  display: block;
+  margin-bottom: 16px;
+  letter-spacing: 0.26em;
+  opacity: 0.85;
+}
+#hero-headline .hh-title {
+  font-family: var(--font-d);
+  font-weight: 500;
+  font-size: clamp(28px, 4.4vw, 58px);
+  line-height: 1.14;
+  letter-spacing: -0.01em;
+}
+@media (max-width: 768px) {
+  #hero-headline { top: 13vh; }
+  #hero-headline .hh-title { font-size: clamp(26px, 8vw, 40px); }
+}
 
 /* ---------- HUD ---------- */
 #hud {
@@ -613,6 +644,15 @@ section { position: relative; overflow: hidden; }
   border-radius: 50%;
   position: relative;
 }
+/* axis crosshair through the circle — echoes "站在……交汇点" */
+#big-circle::before,
+#big-circle::after {
+  content: '';
+  position: absolute;
+  background: var(--hairline);
+}
+#big-circle::before { left: 0; right: 0; top: 50%; height: 1px; }
+#big-circle::after { top: 0; bottom: 0; left: 50%; width: 1px; }
 #big-circle i {
   position: absolute;
   left: 50%;
@@ -623,6 +663,31 @@ section { position: relative; overflow: hidden; }
   border-radius: 50%;
   background: #cfcfcf;
 }
+/* a teal marker that orbits the rim */
+#big-circle .orbit {
+  inset: 0;
+  left: 0;
+  top: 0;
+  width: auto;
+  height: auto;
+  margin: 0;
+  background: none;
+  border-radius: 50%;
+  animation: orbit-spin 26s linear infinite;
+}
+#big-circle .orbit::before {
+  content: '';
+  position: absolute;
+  top: -3px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 50%;
+  background: var(--teal);
+  box-shadow: 0 0 9px var(--teal);
+}
+@keyframes orbit-spin { to { transform: rotate(360deg); } }
 
 /* ---------- footer ---------- */
 #footer {
@@ -831,6 +896,17 @@ html[data-zone='dark'] #top-fade { opacity: 1; }
 :focus-visible {
   outline: 1px solid var(--teal);
   outline-offset: 3px;
+}
+
+/* ---------- reduced motion: still the ambient loops the JS doesn't gate ---------- */
+@media (prefers-reduced-motion: reduce) {
+  #grain { animation: none; }
+  #drag-hint { animation: none; }
+  #big-circle .orbit { animation: none; }
+  #hud-scroll b,
+  .cli-caret,
+  .type-title .caret,
+  .type-title-c .caret { animation: none; }
 }
 
 /* ---------- transition / grain / frame ---------- */

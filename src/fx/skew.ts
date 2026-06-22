@@ -2,9 +2,10 @@ import { gsap } from '../core/scroll';
 
 /**
  * Desktop works gallery: drag horizontally (mouse / trackpad) to browse.
- * Pointer-drag with release inertia, horizontal-wheel support, and a
- * center-focus effect (the poster nearest viewport-center straightens,
- * scales up and brightens; the others tilt away, shrink and dim).
+ * Pointer-drag with release inertia that settles by snapping the nearest
+ * poster to viewport-center, horizontal-wheel support, a center-focus effect
+ * (the centered poster straightens, scales up and brightens; the others tilt
+ * away, shrink and dim), and keyboard access (Tab + ← →).
  * Mobile / reduced-motion fall back to the CSS vertical stack.
  */
 export function initGalleryDrag() {
@@ -30,6 +31,7 @@ export function initGalleryDrag() {
   let lastPX = 0;
   let moved = 0;
   let raf = 0;
+  let wheelTimer = 0;
 
   const minX = () => Math.min(0, viewport.clientWidth - track.scrollWidth);
   const clamp = (v: number) => Math.max(minX(), Math.min(0, v));
@@ -60,11 +62,32 @@ export function initGalleryDrag() {
     if (counter) {
       counter.textContent = `${String(nearest + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
     }
+    return nearest;
   };
 
   const render = () => {
     gsap.set(track, { x });
     focus();
+  };
+
+  // tween the track so poster `i` lands centered; cancels on the next grab
+  const proxy = { v: 0 };
+  let snapTween: ReturnType<typeof gsap.to> | null = null;
+  const snapTo = (i: number) => {
+    i = gsap.utils.clamp(0, total - 1, i);
+    const r = posters[i].getBoundingClientRect();
+    const dest = clamp(x + (window.innerWidth / 2 - (r.left + r.width / 2)));
+    snapTween?.kill();
+    proxy.v = x;
+    snapTween = gsap.to(proxy, {
+      v: dest,
+      duration: 0.55,
+      ease: 'power3.out',
+      onUpdate: () => {
+        x = proxy.v;
+        render();
+      },
+    });
   };
 
   const loop = () => {
@@ -73,8 +96,8 @@ export function initGalleryDrag() {
       vx *= 0.9;
       if (Math.abs(vx) < 0.12 || x === clamp(x + vx * 2)) {
         vx = 0;
-        render();
         raf = 0;
+        snapTo(focus()); // settle on the nearest poster, centered
         return;
       }
     }
@@ -90,6 +113,7 @@ export function initGalleryDrag() {
   };
 
   viewport.addEventListener('pointerdown', (e) => {
+    snapTween?.kill();
     dragging = true;
     moved = 0;
     startPX = e.clientX;
@@ -129,17 +153,21 @@ export function initGalleryDrag() {
   viewport.addEventListener('pointerup', end);
   viewport.addEventListener('pointercancel', end);
 
-  // horizontal trackpad / shift-wheel pans; vertical wheel scrolls the page
+  // horizontal trackpad / shift-wheel pans; vertical wheel scrolls the page.
+  // pan freely while the wheel is active, then snap once it goes idle.
   viewport.addEventListener(
     'wheel',
     (e) => {
       const dx = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.shiftKey ? e.deltaY : 0;
       if (!dx) return;
       e.preventDefault();
+      snapTween?.kill();
       x = clamp(x - dx);
       vx = 0;
       dismissHint();
-      kick();
+      render();
+      clearTimeout(wheelTimer);
+      wheelTimer = window.setTimeout(() => snapTo(focus()), 150);
     },
     { passive: false },
   );
@@ -152,7 +180,25 @@ export function initGalleryDrag() {
   );
   track.addEventListener('dragstart', (e) => e.preventDefault());
 
+  // keyboard: focusing a poster (Tab) centers it; ← → step between posters
+  posters.forEach((p, i) => {
+    p.addEventListener('focus', () => {
+      dismissHint();
+      snapTo(i);
+    });
+    p.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        posters[Math.min(total - 1, i + 1)].focus();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        posters[Math.max(0, i - 1)].focus();
+      }
+    });
+  });
+
   window.addEventListener('resize', () => {
+    snapTween?.kill();
     x = clamp(x);
     render();
   });
