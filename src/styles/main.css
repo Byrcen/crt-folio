@@ -613,6 +613,57 @@ section { position: relative; overflow: hidden; }
 .p-peaky .p-title-zh { color: #e9dfc8; }
 .p-peaky .p-en { color: #8a7d64; }
 
+/* 05 · 人生进度条 — lemon Win95 loader, the loud closer */
+.p-life {
+  background: #f2d21f;
+  border-color: #d8ba14;
+  color: #141414;
+}
+.p-life .p-top { color: #141414; opacity: 1; }
+.p-life .p-no { color: rgba(20, 20, 20, 0.5); opacity: 1; }
+.p-life .p-loadwin {
+  position: absolute;
+  top: 25%;
+  left: 13%;
+  right: 13%;
+  border: 2px solid #141414;
+  background: #f9e968;
+  box-shadow: 5px 5px 0 #141414;
+  padding: 13px;
+}
+.p-life .p-loadwin::before {
+  content: 'LIFE_PROGRESS.EXE';
+  display: block;
+  font-family: var(--font-m);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  background: #141414;
+  color: #f2d21f;
+  padding: 4px 8px;
+  margin: -13px -13px 12px;
+}
+.p-life .p-loadbar {
+  display: flex;
+  gap: 3px;
+  border: 2px solid #141414;
+  padding: 3px;
+  height: 27px;
+  background: #fdf6c8;
+}
+.p-life .p-loadbar i { flex: 1; }
+.p-life .p-loadbar i:nth-child(-n + 5) { background: #141414; }
+.p-life .p-loadtxt {
+  margin-top: 9px;
+  font-family: var(--font-m);
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  color: #141414;
+  opacity: 0.8;
+}
+.p-life .p-title-zh { color: #101010; }
+.p-life .p-en { color: rgba(20, 20, 20, 0.62); }
+.p-life .p-foot { opacity: 0.72; }
+
 /* ---------- manifesto ---------- */
 #manifesto {
   min-height: 120vh;

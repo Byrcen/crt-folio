@@ -43,12 +43,14 @@ export function initGalleryDrag() {
     const vc = window.innerWidth / 2;
     let nearest = 0;
     let nd = Infinity;
-    posters.forEach((p, i) => {
-      const r = p.getBoundingClientRect();
+    // read all rects first, then write all styles: interleaving the two forces
+    // a synchronous layout per poster (5 reflows per drag frame)
+    const rects = posters.map((p) => p.getBoundingClientRect());
+    rects.forEach((r, i) => {
       const pc = r.left + r.width / 2;
       const k = gsap.utils.clamp(-1, 1, ((pc - vc) / window.innerWidth) * 1.7);
       const a = Math.abs(k);
-      gsap.set(p, {
+      gsap.set(posters[i], {
         rotateY: -k * 26,
         scale: 1 - a * 0.16,
         filter: `brightness(${(1 - a * 0.5).toFixed(3)})`,
@@ -186,6 +188,10 @@ export function initGalleryDrag() {
   // keyboard: focusing a poster (Tab) centers it; ← → step between posters
   posters.forEach((p, i) => {
     p.addEventListener('focus', () => {
+      // the browser auto-scrolls the overflow:hidden viewport to reveal the
+      // focused link, bypassing the track transform (counter / center-focus
+      // desync) — undo it; snapTo is the only scroller here
+      viewport.scrollLeft = 0;
       dismissHint();
       snapTo(i);
     });

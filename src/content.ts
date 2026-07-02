@@ -29,7 +29,7 @@ export const COPY = {
 };
 
 export interface Project {
-  theme: 'dungeon' | 'beads' | 'fire' | 'peaky';
+  theme: 'dungeon' | 'beads' | 'fire' | 'peaky' | 'life';
   no: string;
   title: string; // 中文主标题（可含 <br>）
   en: string;
@@ -90,5 +90,17 @@ export const PROJECTS: Project[] = [
     href: 'https://peaky-dossier.vercel.app',
     live: true,
     repo: 'https://github.com/Byrcen/peaky-dossier',
+  },
+  {
+    theme: 'life',
+    no: '05',
+    title: '人生<br>进度条',
+    en: 'LIFE PROGRESS BAR™',
+    top: 'LIFE_PROGRESS.EXE · V1.0',
+    foot: '¥0.00 · 免费但扎心',
+    cap: '好玩但没用的毒舌小工具 —— 输入生日，人生开始 loading，截图即传播',
+    href: 'https://life-progress-bar-one.vercel.app',
+    live: true,
+    repo: 'https://github.com/Byrcen/life-progress-bar',
   },
 ];

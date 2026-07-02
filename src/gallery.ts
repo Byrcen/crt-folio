@@ -42,6 +42,9 @@ function decor(p: Project): string {
       return `<div class="p-emblem">🜂</div>`;
     case 'peaky':
       return `<div class="p-stamp">机密</div><div class="p-redact"><i></i><i></i></div>`;
+    case 'life':
+      // Win95-ish loader window: 12 segments, 5 lit ≈ the 42% in the caption
+      return `<div class="p-loadwin"><div class="p-loadbar">${'<i></i>'.repeat(12)}</div><div class="p-loadtxt">LIFE IS LOADING… 42%</div></div>`;
   }
 }
 
