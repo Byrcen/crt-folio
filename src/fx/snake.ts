@@ -24,10 +24,13 @@ export function initSnake(canvas: HTMLCanvasElement) {
   let last = 0;
 
   const resize = () => {
-    canvas.width = section.clientWidth;
-    canvas.height = section.clientHeight;
-    cols = Math.floor(canvas.width / GRID);
-    rows = Math.floor(canvas.height / GRID);
+    // back the bitmap at device resolution — CSS-pixel bitmaps blur on 2–3× screens
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = section.clientWidth * dpr;
+    canvas.height = section.clientHeight * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    cols = Math.floor(section.clientWidth / GRID);
+    rows = Math.floor(section.clientHeight / GRID);
   };
   resize();
   addEventListener('resize', resize);

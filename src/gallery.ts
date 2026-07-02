@@ -18,7 +18,9 @@ function beadGrid(): string {
   for (const row of HEART) {
     for (const on of row) {
       if (on) {
-        const color = BEAD_COLORS[(k * 3 + 1) % BEAD_COLORS.length];
+        // stride 5 is coprime with the palette size, so all 6 colors cycle
+        // (the old ×3 stride collapsed onto just two of them)
+        const color = BEAD_COLORS[(k * 5 + 1) % BEAD_COLORS.length];
         cells += `<i style="background:${color}"></i>`;
         k++;
       } else {

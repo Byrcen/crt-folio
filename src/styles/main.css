@@ -123,6 +123,8 @@ body.no-native-cursor, body.no-native-cursor * { cursor: none !important; }
   pointer-events: none;
 }
 #switch-label {
+  pointer-events: auto;
+  cursor: pointer;
   position: absolute;
   left: 0;
   top: 0;
@@ -712,7 +714,7 @@ section { position: relative; overflow: hidden; }
 #cta {
   display: block;
   width: fit-content;
-  margin: 7vh auto 14vh;
+  margin: 7vh auto 20px;
   padding: 12px 26px;
   border: 1px solid #d9d9d9;
   border-radius: 999px;
@@ -721,6 +723,23 @@ section { position: relative; overflow: hidden; }
   font-family: var(--font-m);
   font-size: 12px;
   letter-spacing: 0.08em;
+}
+.email-copy {
+  display: block;
+  margin: 0 auto 12vh;
+  padding: 6px 10px;
+  background: none;
+  border: none;
+  font-family: var(--font-m);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: var(--ink-dim);
+  cursor: pointer;
+  transition: color 0.25s ease;
+}
+.email-copy:hover,
+.email-copy:focus-visible {
+  color: var(--ink);
 }
 .foot-row {
   display: flex;
@@ -882,7 +901,8 @@ section { position: relative; overflow: hidden; }
 }
 .ap-divider i { flex: 1; height: 1px; background: var(--hairline); }
 .ap-divider span { color: var(--ink-dim); min-width: 9em; }
-.ap-cta .pill { margin: 0 auto 16vh; }
+.ap-cta .pill { margin: 0 auto 20px; }
+.ap-cta .email-copy { margin-bottom: 15vh; }
 .ap-cta .foot-row { text-align: left; }
 
 /* ---------- top fade mask ---------- */

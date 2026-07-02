@@ -3,10 +3,15 @@ import { gsap } from '../core/scroll';
 /** Split [data-reveal-lines] into lines; reveal gray→white, staggered, on enter. */
 export function initLineReveals() {
   document.querySelectorAll<HTMLElement>('[data-reveal-lines]').forEach((el) => {
-    // tokenize CJK per character, latin runs as whole words
+    // tokenize CJK per character, latin runs as whole words. Screen readers
+    // get the intact sentence via aria-label; the per-char spans are hidden
+    // so they don't get announced one character at a time.
     const text = (el.textContent ?? '').trim().replace(/\s+/g, ' ');
     const tokens = text.match(/[一-鿿　-〿，。—·]|[^\s一-鿿　-〿，。—·]+|\s/g) ?? [];
-    el.innerHTML = tokens.map((t) => (t === ' ' ? ' ' : `<span class="rw">${t}</span>`)).join('');
+    el.setAttribute('aria-label', text);
+    el.innerHTML = `<span aria-hidden="true">${tokens
+      .map((t) => (t === ' ' ? ' ' : `<span class="rw">${t}</span>`))
+      .join('')}</span>`;
     const spans = el.querySelectorAll('.rw');
     gsap.fromTo(
       spans,

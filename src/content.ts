@@ -5,8 +5,8 @@ export const COPY = {
 
   aboutStem: '站在 AI 与产品的交汇点，深耕',
 
-  manifesto: ['把 AI 的想法', '变成交付的产品'],
-  manifestoEcho: '成交付的产',
+  manifesto: ['先写评测', '再做功能'],
+  manifestoEcho: '再做功',
 
   cli: {
     prompt: 'cry@folio ~ %',

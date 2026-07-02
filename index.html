@@ -6,10 +6,12 @@
     <title>cry — AI 产品经理</title>
     <meta name="description" content="站在 AI 与产品的交汇点 — 策略 / 调研 / 交付。cry 的个人作品集：把 AI 的想法变成交付的产品。" />
     <meta name="theme-color" content="#0a0a0a" />
+    <link rel="canonical" href="https://crt-folio.vercel.app/" />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://crt-folio.vercel.app/" />
     <meta property="og:title" content="cry — AI 产品经理" />
     <meta property="og:description" content="站在 AI 与产品的交汇点 — 策略 / 调研 / 交付。输入 /cry，进入我的作品集。" />
-    <meta property="og:image" content="/og.png" />
+    <meta property="og:image" content="https://crt-folio.vercel.app/og.png" />
     <meta name="twitter:card" content="summary_large_image" />
     <link
       rel="icon"
@@ -42,8 +44,8 @@
         <span class="hh-tag mono-label">AI 产品经理 · 策略 / 调研 / 交付</span>
         <h1 class="hh-title">把 AI 的想法<br />变成交付的产品</h1>
       </div>
-      <div id="switch-label">
-        <svg id="switch-arrow" width="70" height="44" viewBox="0 0 70 44" fill="none">
+      <div id="switch-label" role="button" tabindex="0" aria-label="切换日/夜主题" data-hover>
+        <svg id="switch-arrow" width="70" height="44" viewBox="0 0 70 44" fill="none" aria-hidden="true">
           <path d="M62 2 C 50 26, 30 36, 10 34" stroke="currentColor" stroke-width="1" />
           <path d="M16 29 L 9 34 L 17 38" stroke="currentColor" stroke-width="1" fill="none" />
         </svg>
@@ -58,7 +60,7 @@
         <a href="#works" data-hover data-scramble>作品</a>
         <a href="#footer" data-hover data-scramble>联系</a>
       </nav>
-      <canvas id="hud-logo" width="76" height="28" data-hover></canvas>
+      <canvas id="hud-logo" width="76" height="28" data-hover role="button" tabindex="0" aria-label="回到首页"></canvas>
       <div id="hud-right">
         <span class="mono-label">声音</span>
         <button id="sound-toggle" data-hover aria-label="切换声音"><i></i></button>
@@ -78,7 +80,7 @@
       <div id="content">
         <!-- About / positioning -->
         <section id="about">
-          <canvas id="snake"></canvas>
+          <canvas id="snake" aria-hidden="true"></canvas>
           <h2 id="about-title" class="type-title"></h2>
           <ul id="steps">
             <li><span>(1)</span> 洞察</li>
@@ -101,7 +103,7 @@
         <section id="works">
           <div class="works-head">
             <p id="works-intro" class="mono-para" data-reveal-lines>
-              站在 AI 与产品的交汇点，覆盖策略、调研与交付。我端到端地设计 AI
+              从策略、调研到交付，我端到端地设计 AI
               产品 —— 从问题定义、提示词系统，到评测体系与迭代闭环。
             </p>
             <h2 id="works-title"><span>精选作品</span></h2>
@@ -135,9 +137,12 @@
           <a id="cta" class="pill" href="mailto:cry765252871@gmail.com" data-hover>
             <span>联系我</span>
           </a>
+          <button class="email-copy mono-label" data-email="cry765252871@gmail.com" data-hover>
+            cry765252871@gmail.com · 点击复制
+          </button>
           <div id="foot-row" class="foot-row">
             <div class="mono-label"><a href="https://github.com/Byrcen" target="_blank" rel="noopener noreferrer" data-hover>GitHub ↗</a></div>
-            <canvas id="foot-logo" width="76" height="28"></canvas>
+            <canvas id="foot-logo" width="76" height="28" aria-hidden="true"></canvas>
             <div class="mono-label"><em>设计 · 开发</em> cry</div>
           </div>
         </section>
@@ -207,9 +212,12 @@
           <h2 id="ap-cta-title"></h2>
           <div class="ap-divider"><i></i><span id="ap-decode" class="mono-label"></span><i></i></div>
           <a class="pill" href="mailto:cry765252871@gmail.com" data-hover><span>联系我</span></a>
+          <button class="email-copy mono-label" data-email="cry765252871@gmail.com" data-hover>
+            cry765252871@gmail.com · 点击复制
+          </button>
           <div class="foot-row">
             <div class="mono-label"><a href="https://github.com/Byrcen" target="_blank" rel="noopener noreferrer" data-hover>GitHub ↗</a></div>
-            <canvas id="ap-logo" width="76" height="28"></canvas>
+            <canvas id="ap-logo" width="76" height="28" aria-hidden="true"></canvas>
             <div class="mono-label"><em>设计 · 开发</em> cry</div>
           </div>
         </div>
@@ -220,7 +228,7 @@
     <div id="top-fade"></div>
 
     <!-- NO SIGNAL transition -->
-    <canvas id="nosignal"></canvas>
+    <canvas id="nosignal" aria-hidden="true"></canvas>
 
     <!-- film grain + frame -->
     <div id="grain"></div>

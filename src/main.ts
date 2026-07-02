@@ -25,6 +25,11 @@ import type { Stage } from './three/stage';
 
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
+// the boot sequence always starts from the hero; a mid-page restore would sit
+// inside the dolly with stale trigger state (and fire NO SIGNAL on load)
+history.scrollRestoration = 'manual';
+window.scrollTo(0, 0);
+
 renderGallery(); // build posters before cursor/sound bind [data-hover]
 initScroll();
 initCursor();
@@ -108,8 +113,15 @@ function initNav() {
       else goTo('home', href);
     });
   });
-  // logo → back to the hero
-  document.getElementById('hud-logo')!.addEventListener('click', () => goTo('home'));
+  // logo → back to the hero (canvas isn't a native button — mirror Enter/Space)
+  const logo = document.getElementById('hud-logo')!;
+  logo.addEventListener('click', () => goTo('home'));
+  logo.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      goTo('home');
+    }
+  });
 }
 
 // ---------- scroll choreography (home) ----------
@@ -131,9 +143,13 @@ function initScrollFx() {
       clearTimeout(snapTimer);
       if (currentPage !== 'home') return;
       const p = self.progress;
+      // only snap while genuinely mid-dolly. At p===0/1 the channel change is
+      // already settled — scheduling a snap there yanks users (and nav jumps
+      // that cross the whole spacer in one step) back to the seam.
+      if (p <= 0 || p >= 1) return;
       let target: number | null = null;
       if (p > 0.6) target = self.end; // past the midpoint, diving in → finish it
-      else if (p > 0 && p < 0.15) target = self.start; // barely in → ease back to rest
+      else if (p < 0.15) target = self.start; // barely in → ease back to rest
       if (target === null) return; // 0.15–0.6 is a free rest zone
       snapTimer = window.setTimeout(() => {
         lenis.scrollTo(target!, { duration: 1.1, easing: (t: number) => 1 - Math.pow(1 - t, 3) });
@@ -233,16 +249,56 @@ function initScrollFx() {
 // ---------- "切换 日 / 夜" label tracks the TV ----------
 function trackSwitchLabel() {
   const label = document.getElementById('switch-label')!;
+  // the 3D knob is a tiny touch target (hopeless on phones) — the label
+  // itself toggles too, for taps and keyboards alike
+  const toggle = () => {
+    stage?.toggleTheme();
+    sound.play('switch');
+  };
+  label.addEventListener('click', toggle);
+  label.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      toggle();
+    }
+  });
   const tick = () => {
     if (stage && currentPage === 'home') {
       const p = stage.project(stage.labelAnchor);
       label.style.transform = `translate(${p.x}px, ${p.y}px)`;
       const past = (document.documentElement.dataset.zone ?? 'hero') === 'dark';
-      label.style.opacity = p.visible && !past ? '1' : '0';
+      const visible = p.visible && !past;
+      label.style.opacity = visible ? '1' : '0';
+      // it's clickable now — a faded-out label must not leave a ghost hit area
+      label.style.pointerEvents = visible ? 'auto' : 'none';
     }
     requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
+}
+
+// ---------- email copy (mailto is a dead end on clientless desktops) ----------
+function initEmailCopy() {
+  document.querySelectorAll<HTMLButtonElement>('.email-copy').forEach((btn) => {
+    const original = btn.textContent!;
+    const email = btn.dataset.email!;
+    let timer = 0;
+    btn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(email);
+      } catch {
+        const ta = document.createElement('textarea');
+        ta.value = email;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        ta.remove();
+      }
+      btn.textContent = '已复制 ✓';
+      clearTimeout(timer);
+      timer = window.setTimeout(() => (btn.textContent = original), 1600);
+    });
+  });
 }
 
 // ---------- boot ----------
@@ -252,6 +308,7 @@ runPreloader(ready).then(() => {
   initAboutPage();
   trackSwitchLabel();
   initNav();
+  initEmailCopy();
   ScrollTrigger.refresh();
   gsap.set('#hud', { opacity: 1 });
 });
