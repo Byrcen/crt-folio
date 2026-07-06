@@ -29,7 +29,7 @@ export const COPY = {
 };
 
 export interface Project {
-  theme: 'dungeon' | 'beads' | 'fire' | 'peaky' | 'life';
+  theme: 'dungeon' | 'beads' | 'fire' | 'peaky' | 'life' | 'debate';
   no: string;
   title: string; // 中文主标题（可含 <br>）
   en: string;
@@ -41,7 +41,7 @@ export interface Project {
   repo: string; // GitHub 源码仓库
 }
 
-/** 精选作品 — 渲染为四张主题化"海报"，由 src/gallery.ts 输出 */
+/** 精选作品 — 每项渲染为一张主题化"海报"，由 src/gallery.ts 输出 */
 export const PROJECTS: Project[] = [
   {
     theme: 'dungeon',
@@ -102,5 +102,17 @@ export const PROJECTS: Project[] = [
     href: 'https://life-progress-bar-one.vercel.app',
     live: true,
     repo: 'https://github.com/Byrcen/life-progress-bar',
+  },
+  {
+    theme: 'debate',
+    no: '06',
+    title: '辩论赛<br>计时器',
+    en: 'DEBATE TIMER PRO',
+    top: 'ARENA · 主持台',
+    foot: '18 环节赛制 · 单文件',
+    cap: '把主持计时做成比赛的氛围组 —— 火焰随倒计时升温，零漂移、防误触、断线可恢复',
+    href: 'https://debate-timer-two.vercel.app',
+    live: true,
+    repo: 'https://github.com/Byrcen/debate-timer',
   },
 ];

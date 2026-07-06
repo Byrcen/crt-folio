@@ -45,6 +45,9 @@ function decor(p: Project): string {
     case 'life':
       // Win95-ish loader window: 12 segments, 5 lit ≈ the 42% in the caption
       return `<div class="p-loadwin"><div class="p-loadbar">${'<i></i>'.repeat(12)}</div><div class="p-loadtxt">LIFE IS LOADING… 42%</div></div>`;
+    case 'debate':
+      // arena: pro/con seals facing off over the timer readout
+      return `<div class="p-arena"><b class="pro">正</b><em>VS</em><b class="con">反</b></div><div class="p-clock">03:40</div>`;
   }
 }
 

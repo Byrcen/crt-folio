@@ -664,6 +664,74 @@ section { position: relative; overflow: hidden; }
 .p-life .p-en { color: rgba(20, 20, 20, 0.62); }
 .p-life .p-foot { opacity: 0.72; }
 
+/* 06 · 辩论赛计时器 — versus arena, ember firelight in both corners */
+.p-debate {
+  background:
+    radial-gradient(62% 50% at 10% 102%, rgba(217, 77, 77, 0.36) 0%, transparent 68%),
+    radial-gradient(62% 50% at 90% 102%, rgba(74, 139, 212, 0.34) 0%, transparent 68%),
+    linear-gradient(180deg, #0b0d12 0%, #14171f 100%);
+  border-color: #242938;
+  color: #f5f2ea;
+}
+.p-debate .p-top { color: #d94d4d; }
+.p-debate .p-no { color: #8a8e99; }
+.p-debate .p-arena {
+  position: absolute;
+  top: 20%;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 13px;
+}
+.p-debate .p-arena b {
+  font-family: var(--font-d);
+  font-weight: 600;
+  font-size: 21px;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border: 1px solid;
+  border-radius: 3px;
+}
+.p-debate .p-arena b.pro {
+  color: #e88;
+  border-color: rgba(217, 77, 77, 0.65);
+  background: rgba(217, 77, 77, 0.14);
+  box-shadow: 0 0 16px rgba(217, 77, 77, 0.28);
+}
+.p-debate .p-arena b.con {
+  color: #9bc0ea;
+  border-color: rgba(74, 139, 212, 0.65);
+  background: rgba(74, 139, 212, 0.14);
+  box-shadow: 0 0 16px rgba(74, 139, 212, 0.28);
+}
+.p-debate .p-arena em {
+  font-family: var(--font-d);
+  font-style: italic;
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  color: #d8bd7f;
+  opacity: 0.9;
+}
+.p-debate .p-clock {
+  position: absolute;
+  top: 40%;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-family: var(--font-m);
+  font-size: 32px;
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  color: #e06060;
+  text-shadow: 0 0 18px rgba(217, 77, 77, 0.55);
+}
+.p-debate .p-title-zh { color: #f5f2ea; }
+.p-debate .p-en { color: #8a8e99; }
+
 /* ---------- manifesto ---------- */
 #manifesto {
   min-height: 120vh;
