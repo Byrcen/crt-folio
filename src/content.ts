@@ -38,7 +38,7 @@ export interface Project {
   cap: string; // 海报下方说明
   href: string;
   live: boolean; // true=在线体验，false=仅源码
-  repo: string; // GitHub 源码仓库
+  repo?: string; // GitHub 源码仓库（缺省＝仓库私有，不展示源码按钮）
 }
 
 /** 精选作品 — 每项渲染为一张主题化"海报"，由 src/gallery.ts 输出 */
@@ -74,10 +74,9 @@ export const PROJECTS: Project[] = [
     en: 'FIRE & BLOOD',
     top: 'HOUSE TARGARYEN',
     foot: '坦格利安 · 三百年',
-    cap: '把三百年家族史重构成可逛的像素长卷，用渐进叙事降低理解门槛',
-    href: 'https://fire-and-blood.vercel.app',
+    cap: '把三百年王朝史建成可漫游的 16-bit 王座大殿 —— 名场面、世系、巨龙一殿尽览',
+    href: 'https://xueyuhuo.vercel.app',
     live: true,
-    repo: 'https://github.com/Byrcen/fire-and-blood',
   },
   {
     theme: 'peaky',

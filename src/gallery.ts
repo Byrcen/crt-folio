@@ -66,7 +66,7 @@ function posterHTML(p: Project): string {
         <span class="p-view mono-label">${viewLabel}</span>
       </a>
       <figcaption class="cap mono-label">${p.cap}</figcaption>
-      ${p.live ? `<a class="p-src mono-label" href="${p.repo}" target="_blank" rel="noopener noreferrer" data-hover>源码 ↗</a>` : ''}
+      ${p.live && p.repo ? `<a class="p-src mono-label" href="${p.repo}" target="_blank" rel="noopener noreferrer" data-hover>源码 ↗</a>` : ''}
     </figure>`;
 }
 
