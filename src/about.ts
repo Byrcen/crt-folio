@@ -13,31 +13,33 @@ const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 export function initAboutPage() {
   const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // --- blueprint rays (generated, deterministic) ---
-  const svg = document.getElementById('blueprint')!;
-  const NS = 'http://www.w3.org/2000/svg';
-  const RAYS = 24;
-  const rays: SVGLineElement[] = [];
-  for (let i = 0; i < RAYS; i++) {
-    const a = (i / RAYS) * Math.PI * 2 + 0.13;
-    const len = 112 + ((i * 37) % 68);
-    const l = document.createElementNS(NS, 'line');
-    l.setAttribute('x1', '200');
-    l.setAttribute('y1', '200');
-    l.setAttribute('x2', (200 + Math.cos(a) * len).toFixed(1));
-    l.setAttribute('y2', (200 + Math.sin(a) * len).toFixed(1));
-    l.setAttribute('class', 'bp-ray');
-    svg.appendChild(l);
-    rays.push(l);
-  }
-
-  const square = document.getElementById('bp-square')!;
-  const crossH = document.getElementById('bp-cross-h')!;
-  const crossV = document.getElementById('bp-cross-v')!;
+  // --- blueprint: CRT tv anatomy, drawn in reading order as you scroll ---
   const dot = document.getElementById('bp-dot')!;
   const seg = (el: HTMLElement, p: number, a: number, b: number) => {
     el.style.strokeDashoffset = String(100 * (1 - clamp01((p - a) / (b - a))));
   };
+  // [id, start, end] — 机身 → 屏幕 → 天线 → 旋钮 → 格栅 → 脚 → 尺寸标注 → 四角引线
+  const drawOrder: [HTMLElement, number, number][] = [
+    ['bp-body', 0.02, 0.18],
+    ['bp-screen', 0.16, 0.3],
+    ['bp-ant-l', 0.28, 0.36],
+    ['bp-ant-r', 0.32, 0.4],
+    ['bp-ant-base', 0.36, 0.42],
+    ['bp-knob', 0.4, 0.46],
+    ['bp-knob2', 0.44, 0.5],
+    ['bp-g1', 0.48, 0.52],
+    ['bp-g2', 0.5, 0.54],
+    ['bp-g3', 0.52, 0.56],
+    ['bp-foot-l', 0.56, 0.6],
+    ['bp-foot-r', 0.58, 0.62],
+    ['bp-dim-l', 0.64, 0.68],
+    ['bp-dim-r', 0.64, 0.68],
+    ['bp-dim', 0.66, 0.74],
+    ['bp-lead-0', 0.76, 0.82],
+    ['bp-lead-1', 0.8, 0.86],
+    ['bp-lead-2', 0.84, 0.9],
+    ['bp-lead-3', 0.88, 0.94],
+  ].map(([id, a, b]) => [document.getElementById(id as string)!, a as number, b as number]);
 
   ScrollTrigger.create({
     trigger: '#feat',
@@ -45,14 +47,8 @@ export function initAboutPage() {
     end: 'bottom bottom',
     onUpdate: (self) => {
       const p = self.progress;
-      seg(square, p, 0.02, 0.2);
-      seg(crossH, p, 0.22, 0.32);
-      seg(crossV, p, 0.3, 0.4);
-      dot.style.opacity = p > 0.42 ? '1' : '0';
-      // rays accumulate in discrete batches
-      rays.forEach((r, i) => {
-        r.style.opacity = p > 0.46 + (i / RAYS) * 0.5 ? '1' : '0';
-      });
+      drawOrder.forEach(([el, a, b]) => seg(el, p, a, b));
+      dot.style.opacity = p > 0.96 ? '1' : '0';
     },
   });
 

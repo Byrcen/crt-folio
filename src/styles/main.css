@@ -911,6 +911,8 @@ section { position: relative; overflow: hidden; }
   position: relative;
   pointer-events: auto;
   background: var(--bg-dark);
+  /* 祖先 overflow:hidden 会让 #feat-left 的 sticky 失效（滚动中左板直接滚走）*/
+  overflow: visible;
 }
 .ap-hero {
   position: relative;
@@ -987,20 +989,19 @@ section { position: relative; overflow: hidden; }
   aspect-ratio: 1;
 }
 #blueprint rect,
-#blueprint line {
+#blueprint line,
+#blueprint circle {
   fill: none;
   stroke: #161616;
   stroke-width: 1.2;
   stroke-dasharray: 100;
   stroke-dashoffset: 100;
 }
-#blueprint .bp-ray {
-  stroke-dasharray: none;
-  stroke-dashoffset: 0;
-  opacity: 0;
+#blueprint .bp-lead {
   stroke-width: 1;
+  opacity: 0.55;
 }
-#bp-dot { fill: #111; opacity: 0; }
+#blueprint #bp-dot { fill: #111; stroke: none; stroke-dasharray: none; opacity: 0; }
 .feat-corner {
   position: absolute;
   color: #2c2c2c;

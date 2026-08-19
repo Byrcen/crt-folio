@@ -179,10 +179,27 @@
         <div id="feat">
           <div id="feat-left">
             <svg id="blueprint" viewBox="0 0 400 400">
-              <rect id="bp-square" x="100" y="100" width="200" height="200" pathLength="100" />
-              <line id="bp-cross-h" x1="100" y1="200" x2="300" y2="200" pathLength="100" />
-              <line id="bp-cross-v" x1="200" y1="100" x2="200" y2="300" pathLength="100" />
-              <circle id="bp-dot" cx="200" cy="200" r="4" />
+              <!-- CRT 电视解剖线稿：随滚动按序绘制（about.ts 驱动 stroke-dashoffset） -->
+              <line id="bp-ant-l" x1="200" y1="112" x2="152" y2="48" pathLength="100" />
+              <line id="bp-ant-r" x1="200" y1="112" x2="250" y2="52" pathLength="100" />
+              <circle id="bp-ant-base" cx="200" cy="106" r="7" pathLength="100" />
+              <rect id="bp-body" x="86" y="112" width="228" height="170" rx="12" pathLength="100" />
+              <rect id="bp-screen" x="104" y="130" width="142" height="120" rx="7" pathLength="100" />
+              <circle id="bp-knob" cx="284" cy="152" r="11" pathLength="100" />
+              <circle id="bp-knob2" cx="284" cy="184" r="7" pathLength="100" />
+              <line id="bp-g1" x1="262" y1="216" x2="306" y2="216" pathLength="100" />
+              <line id="bp-g2" x1="262" y1="226" x2="306" y2="226" pathLength="100" />
+              <line id="bp-g3" x1="262" y1="236" x2="306" y2="236" pathLength="100" />
+              <line id="bp-foot-l" x1="118" y1="282" x2="118" y2="298" pathLength="100" />
+              <line id="bp-foot-r" x1="282" y1="282" x2="282" y2="298" pathLength="100" />
+              <line id="bp-dim" x1="86" y1="322" x2="314" y2="322" pathLength="100" />
+              <line id="bp-dim-l" x1="86" y1="314" x2="86" y2="330" pathLength="100" />
+              <line id="bp-dim-r" x1="314" y1="314" x2="314" y2="330" pathLength="100" />
+              <line class="bp-lead" id="bp-lead-0" x1="104" y1="130" x2="52" y2="78" pathLength="100" />
+              <line class="bp-lead" id="bp-lead-1" x1="250" y1="52" x2="348" y2="70" pathLength="100" />
+              <line class="bp-lead" id="bp-lead-2" x1="118" y1="298" x2="54" y2="330" pathLength="100" />
+              <line class="bp-lead" id="bp-lead-3" x1="284" y1="184" x2="348" y2="330" pathLength="100" />
+              <circle id="bp-dot" cx="175" cy="190" r="4" />
             </svg>
             <span class="feat-corner mono-label tl" data-i="0">能力 #1</span>
             <span class="feat-corner mono-label tr" data-i="1">能力 #2</span>
