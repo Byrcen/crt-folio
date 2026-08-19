@@ -16,10 +16,19 @@ class SoundFX {
     }
   }
 
-  play(name: 'tick' | 'click' | 'switch' | 'static' | 'reveal') {
+  play(name: 'tick' | 'click' | 'switch' | 'static' | 'reveal' | 'poweron' | 'zap') {
     if (!this.enabled || !this.ctx || this.ctx.state !== 'running') return;
     const t = this.ctx.currentTime;
     switch (name) {
+      case 'poweron': // CRT 上电：消磁闷响 + 显像管升压扫频 + 静电噼啪
+        this.blip(t, 88, 0.42, 0.13, 'sine');
+        this.sweep(t + 0.06, 300, 1300, 0.5, 0.045);
+        this.noise(t + 0.02, 0.22, 0.035, 3200);
+        break;
+      case 'zap': // 点击屏幕彩蛋：短促静电
+        this.noise(t, 0.09, 0.06, 1900);
+        this.blip(t, 1300, 0.04, 0.035, 'square');
+        break;
       case 'tick': // hover: tiny high blip
         this.blip(t, 1700, 0.03, 0.035, 'square');
         break;

@@ -25,7 +25,7 @@ export const COPY = {
       '- 先写评测，再做功能',
       '- 每周交付，持续学习',
     ],
-    corners: ['cry — 01', 'AIPM', 'REC ●', 'CH 03'],
+    corners: ['cry — 01', 'AIPM', 'REC ●', 'CH 00'], // CH 00 = 开机频道；正文各区 CH 01–05
   },
 };
 

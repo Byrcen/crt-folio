@@ -88,6 +88,7 @@ export class Stage {
   private eased = 0; // lerped camera progress
   private paused = false;
   private onKnob?: () => void;
+  private onScreen?: () => void;
 
   // camera path (z 8.3 ≈ 电视视觉宽度 +27%，五档截图对比后定档)
   private startPos = new THREE.Vector3(0, 0.16, 8.3);
@@ -225,6 +226,10 @@ export class Stage {
       if (this.paused) return;
       const hit = this.raycast();
       if (hit === 'knob') this.onKnob?.();
+      else if (hit === 'screen') {
+        this.screenFX.egg();
+        this.onScreen?.();
+      }
     });
 
     // restore the visitor's last day/night choice (no transition on boot)
@@ -240,6 +245,15 @@ export class Stage {
 
   onKnobClick(fn: () => void) {
     this.onKnob = fn;
+  }
+
+  onScreenClick(fn: () => void) {
+    this.onScreen = fn;
+  }
+
+  /** CRT power-on moment, fired right after the preloader lifts. */
+  powerOnScreen() {
+    this.screenFX.powerOn();
   }
 
   setProgress(p: number) {
@@ -328,6 +342,7 @@ export class Stage {
 
   private tick(t: number) {
     if (this.paused) return;
+    this.screenFX.setProgress(this.progress);
     this.screenFX.update(t);
 
     // night: screen glow breathes; dust drifts down through the spot cone

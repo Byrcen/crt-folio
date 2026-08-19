@@ -168,6 +168,18 @@ body.no-native-cursor, body.no-native-cursor * { cursor: none !important; }
   #hero-headline { top: 11vh; }
   #hero-headline .hh-title { font-size: clamp(26px, 8vw, 40px); }
 }
+/* headline "信号调入"：RGB 错位一闪归位（开机后 main.ts 加 .hh-in） */
+#hero-headline .hh-title { opacity: 0; }
+#hero-headline.hh-in .hh-title { animation: hh-tune 0.7s steps(7) both; }
+@keyframes hh-tune {
+  0% { opacity: 0; text-shadow: -7px 0 rgba(255, 40, 80, 0.6), 7px 0 rgba(40, 210, 255, 0.6); transform: skewX(-5deg); }
+  45% { opacity: 1; text-shadow: -3px 0 rgba(255, 40, 80, 0.4), 3px 0 rgba(40, 210, 255, 0.4); }
+  100% { opacity: 1; text-shadow: none; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #hero-headline .hh-title { opacity: 1; }
+  #hero-headline.hh-in .hh-title { animation: none; }
+}
 
 /* ---------- HUD ---------- */
 #hud {

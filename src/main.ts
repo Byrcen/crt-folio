@@ -305,6 +305,11 @@ function initEmailCopy() {
 // ---------- boot ----------
 const ready = Promise.all([document.fonts.ready, stageReady, new Promise((r) => setTimeout(r, 300))]);
 runPreloader(ready).then(() => {
+  // the CLI "enter" turns the set on: power-on sweep + headline tunes in
+  stage?.powerOnScreen();
+  sound.play('poweron');
+  document.getElementById('hero-headline')!.classList.add('hh-in');
+  stage?.onScreenClick(() => sound.play('zap'));
   initScrollFx();
   initBroadcastLayer();
   initAboutPage();
