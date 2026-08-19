@@ -81,6 +81,7 @@
         <!-- About / positioning -->
         <section id="about">
           <canvas id="snake" aria-hidden="true"></canvas>
+          <span class="ch-badge mono-label" aria-hidden="true">CH 01 · 关于</span>
           <h2 id="about-title" class="type-title"></h2>
           <ul id="steps">
             <li><span>(1)</span> 洞察</li>
@@ -97,10 +98,15 @@
             <span>做出人们真正需要的 AI 产品</span>
           </div>
           <div id="about-hint" class="mono-label">向下滚动</div>
+          <div id="sig-meter" aria-hidden="true">
+            <i></i><i></i><i></i><i></i><i></i>
+            <span class="mono-label">SIG 87%</span>
+          </div>
         </section>
 
         <!-- Works gallery -->
         <section id="works">
+          <span class="ch-badge mono-label" aria-hidden="true">CH 02 · 精选作品</span>
           <div class="works-head">
             <p id="works-intro" class="mono-para" data-reveal-lines>
               从策略、调研到交付，我端到端地设计 AI
@@ -117,6 +123,8 @@
 
         <!-- Manifesto -->
         <section id="manifesto">
+          <span id="mani-watermark" aria-hidden="true">CH 03</span>
+          <span class="ch-badge mono-label" aria-hidden="true">CH 03 · 宣言</span>
           <div id="mani-tag" class="mono-label">cry<br />axis</div>
           <h2 id="mani-title" class="type-title-c">
             <span class="l1"></span>
@@ -128,6 +136,7 @@
 
         <!-- Footer -->
         <section id="footer">
+          <span class="ch-badge mono-label" aria-hidden="true">CH 04 · 联系</span>
           <div id="foot-arrow">↓</div>
           <div id="foot-box" class="mono-para">
             AI 产品经理，帮团队把想法<br />
@@ -153,6 +162,8 @@
       <section id="page-about" hidden>
         <div class="ap-hero">
           <i class="ap-axis"></i>
+          <span class="ch-badge mono-label" aria-hidden="true">CH 05 · 关于 cry</span>
+          <span class="ap-coord mono-label" aria-hidden="true">Y · 000 — 交汇点</span>
           <span class="ap-label mono-label">关于我</span>
           <h1 id="ap-title"></h1>
           <p id="ap-sub" class="mono-para" data-reveal-lines>
@@ -223,6 +234,9 @@
         </div>
       </section>
     </main>
+
+    <!-- broadcast frequency ruler (dark zones only; ticks built by channel.ts) -->
+    <div id="freq-ruler" aria-hidden="true"></div>
 
     <!-- top fade mask over dark zones -->
     <div id="top-fade"></div>

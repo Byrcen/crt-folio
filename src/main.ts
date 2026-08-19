@@ -19,6 +19,7 @@ import {
   initManifestoEcho,
 } from './fx/reveal';
 import { initAboutPage } from './about';
+import { initBroadcastLayer } from './fx/channel';
 import { renderGallery } from './gallery';
 import { COPY } from './content';
 import type { Stage } from './three/stage';
@@ -305,6 +306,7 @@ function initEmailCopy() {
 const ready = Promise.all([document.fonts.ready, stageReady, new Promise((r) => setTimeout(r, 300))]);
 runPreloader(ready).then(() => {
   initScrollFx();
+  initBroadcastLayer();
   initAboutPage();
   trackSwitchLabel();
   initNav();

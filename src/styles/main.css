@@ -279,7 +279,8 @@ main #content { pointer-events: auto; }
 #hero-spacer { height: 260vh; }
 #content {
   position: relative;
-  background: var(--bg-dark);
+  /* 极淡横向扫描线叠在底色上（广播层） */
+  background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.014) 0 1px, transparent 1px 4px), var(--bg-dark);
 }
 
 /* ---------- about ---------- */
@@ -1139,8 +1140,96 @@ body.cursor-hidden #cursor { opacity: 0; }
 }
 .pill span { opacity: 0; }
 
+/* ---------- broadcast layer: channel badges / freq ruler / supports ---------- */
+.ch-badge {
+  position: absolute;
+  top: 5vh;
+  left: 3.5vw;
+  color: var(--ink-dim);
+  letter-spacing: 0.22em;
+  opacity: 0;
+  z-index: 2;
+}
+#footer .ch-badge { top: 2vh; }
+#page-about .ch-badge { top: 12vh; } /* 子页无滚动语境，避开 HUD 导航 */
+.ch-badge.on { animation: ch-flick 0.5s steps(2) both; }
+@keyframes ch-flick {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  45% { opacity: 0.25; }
+  60% { opacity: 1; }
+  75% { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+#freq-ruler {
+  position: fixed;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+}
+html[data-zone='dark'] #freq-ruler { opacity: 1; }
+#freq-ruler i {
+  width: 7px;
+  height: 1px;
+  background: var(--ink-dim);
+  opacity: 0.4;
+  margin-left: auto;
+  transition: width 0.2s ease, opacity 0.2s ease, background 0.2s ease;
+}
+#freq-ruler i.hot { width: 14px; opacity: 1; background: var(--teal); }
+#sig-meter {
+  position: absolute;
+  right: 4vw;
+  bottom: 12vh;
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  color: var(--ink-dim);
+}
+#sig-meter i { width: 5px; background: var(--ink-dim); opacity: 0.7; }
+#sig-meter i:nth-child(1) { height: 4px; }
+#sig-meter i:nth-child(2) { height: 7px; }
+#sig-meter i:nth-child(3) { height: 10px; }
+#sig-meter i:nth-child(4) { height: 13px; background: var(--teal); }
+#sig-meter i:nth-child(5) { height: 16px; background: var(--teal); }
+#sig-meter .mono-label { margin-left: 8px; }
+#mani-watermark {
+  position: absolute;
+  left: 50%;
+  top: 8vh;
+  transform: translateX(-50%);
+  font-family: var(--font-d);
+  font-weight: 600;
+  font-size: 24vw;
+  line-height: 1;
+  color: #101010;
+  pointer-events: none;
+  user-select: none;
+}
+.ap-coord {
+  position: absolute;
+  left: calc(50% + 12px);
+  top: 16vh;
+  color: var(--ink-dim);
+  opacity: 0.6;
+  writing-mode: vertical-rl;
+  letter-spacing: 0.3em;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ch-badge, .ch-badge.on { animation: none; opacity: 1; }
+}
+
 /* ---------- responsive ---------- */
 @media (max-width: 768px) {
+  #freq-ruler, #sig-meter, .ap-coord { display: none; }
+  #mani-watermark { font-size: 40vw; }
   #cursor, #hud-comment, .reg-dot { display: none; }
   .type-title { max-width: 96%; }
   #about-title { max-width: 96%; font-size: clamp(26px, 7.2vw, 40px); }
