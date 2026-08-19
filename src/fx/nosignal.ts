@@ -25,11 +25,19 @@ export function playNoSignal(durationMs = 1000): Promise<void> {
   let last = performance.now();
 
   return new Promise((resolve) => {
+    // a backgrounded tab throttles rAF: the paused-clock frame loop freezes with
+    // its last (often black) frame covering the page. On return, fast-forward —
+    // the next rAF then runs the p>=1 cleanup immediately.
+    const onVis = () => {
+      if (document.visibilityState === 'visible') elapsed = durationMs;
+    };
+    document.addEventListener('visibilitychange', onVis);
     const frame = (now: number) => {
       elapsed += Math.min(now - last, 64);
       last = now;
       const p = elapsed / durationMs;
       if (p >= 1) {
+        document.removeEventListener('visibilitychange', onVis);
         cv.style.display = 'none';
         playing = false;
         resolve();
