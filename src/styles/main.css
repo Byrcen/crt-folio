@@ -300,8 +300,9 @@ section { position: relative; overflow: hidden; }
 }
 #about-title {
   position: relative;
-  max-width: 62%;
+  max-width: 80%; /* 第一行须整行放下，\n 是唯一断点 */
   min-height: 3.2em;
+  white-space: pre-line; /* 打字机文案里的 \n 是预设断行点 */
 }
 #steps {
   position: absolute;
@@ -1142,7 +1143,7 @@ body.cursor-hidden #cursor { opacity: 0; }
 @media (max-width: 768px) {
   #cursor, #hud-comment, .reg-dot { display: none; }
   .type-title { max-width: 96%; }
-  #about-title { max-width: 96%; }
+  #about-title { max-width: 96%; font-size: clamp(26px, 7.2vw, 40px); }
   #steps { position: relative; top: 0; right: 0; margin-top: 6vh; }
   #steps li, #steps li:nth-child(n) { transform: none; margin-bottom: 3vh; }
   /* no drag on mobile — stack vertically */

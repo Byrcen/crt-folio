@@ -3,7 +3,8 @@ export const COPY = {
   stem: '站在 AI 与产品的交汇点，深耕',
   words: ['产品策略', '用户研究', '落地交付'],
 
-  aboutStem: '站在 AI 与产品的交汇点，深耕',
+  // \n 是预设断行点（#about-title 用 pre-line 渲染），保证「交汇点」永不跨行
+  aboutStem: '站在 AI 与产品的交汇点，\n深耕',
 
   manifesto: ['先写评测', '再做功能'],
   manifestoEcho: '再做功',
