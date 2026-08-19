@@ -62,8 +62,8 @@ export class Stage {
   private paused = false;
   private onKnob?: () => void;
 
-  // camera path
-  private startPos = new THREE.Vector3(0, 0.18, 10.5);
+  // camera path (z 8.3 ≈ 电视视觉宽度 +27%，五档截图对比后定档)
+  private startPos = new THREE.Vector3(0, 0.16, 8.3);
   private endPos = new THREE.Vector3(-0.13, 0.06, 1.05);
   private startLook = new THREE.Vector3(0, -0.05, 0);
   private endLook = new THREE.Vector3(-0.13, 0.06, 0.476);

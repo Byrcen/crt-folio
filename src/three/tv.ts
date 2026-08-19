@@ -44,12 +44,48 @@ export function buildTv(screenTexture: THREE.Texture): Tv {
   screen.name = 'screen';
   group.add(screen);
 
+  // V-shaped rabbit-ear antenna on the top-back (short & wide so the tips
+  // stay clear of the hero headline above the set)
+  for (const dir of [-1, 1]) {
+    const ant = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.009, 0.45, 8), accentMat);
+    ant.position.set(dir * 0.153, 0.62, -0.18);
+    ant.rotation.z = dir * -0.75;
+    group.add(ant);
+  }
+  const antBase = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 8), darkMat);
+  antBase.position.set(0, 0.455, -0.18);
+  group.add(antBase);
+
   // right-side control column: knob (day/night), indicator, switches
   const knob = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.03, 24), accentMat);
   knob.rotation.x = Math.PI / 2;
   knob.position.set(0.42, -0.27, 0.47);
   knob.name = 'knob';
   group.add(knob);
+
+  // volume knob: smaller, decorative only (raycast still targets the main knob)
+  const knob2 = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.028, 0.026, 20), accentMat);
+  knob2.rotation.x = Math.PI / 2;
+  knob2.position.set(0.42, -0.17, 0.47);
+  group.add(knob2);
+
+  // tick ring around the main knob
+  for (let i = 0; i < 12; i++) {
+    const a = (i / 12) * Math.PI * 2;
+    const tick = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.018, 0.008), darkMat);
+    tick.position.set(0.42 + Math.cos(a) * 0.068, -0.27 + Math.sin(a) * 0.068, 0.465);
+    tick.rotation.z = a;
+    group.add(tick);
+  }
+
+  // side accent grooves (two thin dark lines per side)
+  for (const sx of [-1, 1]) {
+    for (const dz of [-0.18, 0.12]) {
+      const groove = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.7, 0.02), darkMat);
+      groove.position.set(sx * 0.581, -0.02, dz);
+      group.add(groove);
+    }
+  }
 
   const dot = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.02, 12), new THREE.MeshBasicMaterial({ color: 0x3fd8c0 }));
   dot.rotation.x = Math.PI / 2;
