@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import gsap from 'gsap';
 import { buildTv } from './tv';
+import { buildProps } from './props';
 import { ScreenFX } from './screen';
 
 type Theme = 'day' | 'night';
@@ -14,6 +15,7 @@ const THEMES = {
     key: 0.95,
     spot: 0.4, // a soft pool of light on the TV even by day
     halo: 0.4,
+    props: { plastic: 0x2b2823, label: 0xd8cfba, pot: 0x8a5a3a, leaf: 0x4a6b45 },
   },
   night: {
     wall: 0x232323,
@@ -23,6 +25,7 @@ const THEMES = {
     key: 0.12,
     spot: 1.7,
     halo: 0.85,
+    props: { plastic: 0x191919, label: 0x555048, pot: 0x4a3626, leaf: 0x2c3d2a },
   },
 };
 
@@ -47,6 +50,7 @@ export class Stage {
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
   private tv = buildTv(this.screenFX.texture);
+  private props = buildProps();
   private wallMat: THREE.MeshStandardMaterial;
   private shelfTopMat: THREE.MeshStandardMaterial;
   private shelfFrontMat: THREE.MeshStandardMaterial;
@@ -98,6 +102,9 @@ export class Stage {
     // tv on the shelf
     this.tv.group.position.set(0, 0, 0);
     this.scene.add(this.tv.group);
+
+    // shelf-top props flanking the set
+    this.scene.add(this.props.group);
 
     // lights
     this.ambient = new THREE.AmbientLight(0xffffff, THEMES.day.ambient);
@@ -194,6 +201,10 @@ export class Stage {
     lerpColor(this.shelfFrontMat, T.shelfFront, dur * 0.6, 0.05);
     lerpColor(this.shelfTopMat, T.shelfTop, dur * 0.8, 0.1);
     lerpColor(this.wallMat, T.wall, dur, 0.15);
+    lerpColor(this.props.mats.plastic, T.props.plastic, dur, 0.08);
+    lerpColor(this.props.mats.label, T.props.label, dur, 0.08);
+    lerpColor(this.props.mats.pot, T.props.pot, dur, 0.12);
+    lerpColor(this.props.mats.leaf, T.props.leaf, dur, 0.12);
     gsap.to(this.ambient, { intensity: T.ambient, duration: dur, ease: 'power2.inOut', overwrite: 'auto' });
     gsap.to(this.key, { intensity: T.key, duration: dur, ease: 'power2.inOut', overwrite: 'auto' });
     gsap.to(this.spot, { intensity: T.spot, duration: dur, delay: 0.1, ease: 'power2.inOut', overwrite: 'auto' });
