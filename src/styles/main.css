@@ -482,6 +482,27 @@ section { position: relative; overflow: hidden; }
 }
 .poster:hover .p-view { opacity: 0.95; transform: translateY(0); }
 .poster:hover .p-foot { opacity: 0; }
+/* 通电扫描：hover 时一道亮线自上而下扫过 */
+.poster::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  opacity: 0;
+  background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.38) 50%, transparent);
+  background-size: 100% 16%;
+  background-repeat: no-repeat;
+  background-position: 0 -20%;
+}
+.poster:hover::before { animation: p-power 0.55s ease-out; }
+@keyframes p-power {
+  0% { opacity: 1; background-position: 0 -20%; }
+  100% { opacity: 0; background-position: 0 130%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .poster:hover::before { animation: none; }
+}
 
 /* 01 · 暗日地下城 — sci-fi survival, dark sun eclipse */
 .p-dungeon {
@@ -533,10 +554,12 @@ section { position: relative; overflow: hidden; }
 .p-beads .p-beadgrid i {
   aspect-ratio: 1;
   border-radius: 50%;
-  box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.14);
+  /* 珠面高光 + 底部收暗，让爱心剪影立起来 */
+  background: radial-gradient(circle at 32% 30%, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0) 46%), var(--bead);
+  box-shadow: inset 0 -2px 3px rgba(0, 0, 0, 0.18);
 }
 .p-beads .p-beadgrid i.off {
-  background: #ddd5c6;
+  background: none;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
 }
 .p-beads .p-title-zh { color: #23201b; }
@@ -550,15 +573,21 @@ section { position: relative; overflow: hidden; }
 }
 .p-fire .p-top { color: #d98b3a; letter-spacing: 0.16em; }
 .p-fire .p-no { color: #c98a6a; }
-.p-fire .p-emblem {
+.p-fire .p-dragon {
   position: absolute;
-  top: 26%;
+  top: 15%;
   left: 50%;
   transform: translateX(-50%);
-  font-size: 4.4vw;
-  color: #e8632a;
-  text-shadow: 0 0 24px rgba(255, 106, 40, 0.5);
-  opacity: 0.9;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  filter: drop-shadow(0 0 14px rgba(255, 106, 40, 0.35));
+}
+.p-fire .p-dragon i { display: flex; gap: 2px; }
+.p-fire .p-dragon b { width: clamp(7px, 0.85vw, 12px); aspect-ratio: 1; }
+.p-fire .p-dragon b.on {
+  background: linear-gradient(180deg, #ffb35a, #e8632a);
+  box-shadow: 0 0 7px rgba(255, 106, 40, 0.4);
 }
 .p-fire .p-title-zh {
   background: linear-gradient(180deg, #ffd9a0, #e8632a 55%, #b01f1f);
@@ -573,47 +602,65 @@ section { position: relative; overflow: hidden; }
   left: 0;
   right: 0;
   bottom: 0;
-  height: 42%;
-  background: radial-gradient(80% 100% at 50% 120%, rgba(255, 106, 40, 0.32) 0%, transparent 70%);
+  height: 55%;
+  background: radial-gradient(90% 110% at 50% 120%, rgba(255, 106, 40, 0.5) 0%, rgba(176, 31, 31, 0.25) 45%, transparent 75%);
   pointer-events: none;
 }
 
-/* 04 · 浴血黑帮 — noir dossier */
+/* 04 · 浴血黑帮 — kraft-paper case dossier */
 .p-peaky {
-  background: #15130f;
-  border-color: #2a2620;
-  color: #cabfa8;
+  background: linear-gradient(180deg, #cabb98 0%, #b7a67f 100%);
+  border-color: #988761;
+  color: #2c2519;
 }
-.p-peaky .p-top { color: #9a8e74; }
-.p-peaky .p-no { color: #6f6552; }
+.p-peaky .p-top { color: #6f5f3f; }
+.p-peaky .p-no { color: #6f5f3f; }
 .p-peaky .p-stamp {
   position: absolute;
-  top: 19%;
-  right: 12%;
-  transform: rotate(-12deg);
-  border: 2px solid #b23b32;
-  color: #b23b32;
-  padding: 3px 9px;
+  top: 14%;
+  right: 9%;
+  transform: rotate(-14deg);
+  border: 3px solid #a8352c;
+  color: #a8352c;
+  padding: 4px 11px;
   font-family: var(--font-m);
-  font-size: 13px;
+  font-size: 16px;
   letter-spacing: 0.18em;
   border-radius: 2px;
-  opacity: 0.85;
+  opacity: 0.88;
+  z-index: 2;
 }
-.p-peaky .p-redact {
+/* 红线串起的空照片框 */
+.p-peaky .p-photos {
   position: absolute;
-  top: 42%;
-  left: 20px;
-  right: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 7px;
+  top: 28%;
+  left: 13%;
+  right: 13%;
+  height: 32%;
 }
-.p-peaky .p-redact i { height: 9px; background: #000; }
-.p-peaky .p-redact i:nth-child(1) { width: 72%; }
-.p-peaky .p-redact i:nth-child(2) { width: 46%; }
-.p-peaky .p-title-zh { color: #e9dfc8; }
-.p-peaky .p-en { color: #8a7d64; }
+.p-peaky .p-photos i {
+  position: absolute;
+  width: 36%;
+  aspect-ratio: 0.82;
+  border: 2px solid #241d10;
+  background: #efe6cf;
+  box-shadow: 2px 3px 0 rgba(36, 29, 16, 0.35);
+}
+.p-peaky .p-photos i:nth-child(1) { left: 0; top: 0; transform: rotate(-5deg); }
+.p-peaky .p-photos i:nth-child(2) { left: 32%; top: 30%; transform: rotate(3deg); }
+.p-peaky .p-photos i:nth-child(3) { right: 0; top: 6%; transform: rotate(-2deg); }
+.p-peaky .p-string {
+  position: absolute;
+  left: 4%;
+  top: 30%;
+  width: 92%;
+  height: 1.5px;
+  background: #a8352c;
+  transform: rotate(7deg);
+  box-shadow: 0 26px 0 -1px #a8352c;
+}
+.p-peaky .p-title-zh { color: #241d10; }
+.p-peaky .p-en { color: #6f5f3f; }
 
 /* 05 · 人生进度条 — lemon Win95 loader, the loud closer */
 .p-life {

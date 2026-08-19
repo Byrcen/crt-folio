@@ -21,7 +21,7 @@ function beadGrid(): string {
         // stride 5 is coprime with the palette size, so all 6 colors cycle
         // (the old ×3 stride collapsed onto just two of them)
         const color = BEAD_COLORS[(k * 5 + 1) % BEAD_COLORS.length];
-        cells += `<i style="background:${color}"></i>`;
+        cells += `<i style="--bead:${color}"></i>`; // CSS 变量让珠面高光可叠加
         k++;
       } else {
         cells += `<i class="off"></i>`;
@@ -31,6 +31,22 @@ function beadGrid(): string {
   return `<div class="p-beadgrid">${cells}</div>`;
 }
 
+/** Pixel three-headed dragon sigil for the 血与火 poster (1 = lit). */
+const DRAGON = [
+  '...#.......#...',
+  '..##.......##..',
+  '.#.#...#...#.#.',
+  '.#..#.###.#..#.',
+  '..#..##.##..#..',
+  '..#..#####..#..',
+  '..###########..',
+  '.#####.#.#####.',
+  '..###..#..###..',
+  '....#..#..#....',
+  '.....#.#.#.....',
+  '......###......',
+];
+
 /** Theme-specific decorative middle layer. */
 function decor(p: Project): string {
   switch (p.theme) {
@@ -38,10 +54,14 @@ function decor(p: Project): string {
       return `<div class="p-sun"></div>`;
     case 'beads':
       return beadGrid();
-    case 'fire':
-      return `<div class="p-emblem">🜂</div>`;
+    case 'fire': {
+      const rows = DRAGON.map(
+        (row) => `<i>${[...row].map((ch) => `<b${ch === '#' ? ' class="on"' : ''}></b>`).join('')}</i>`,
+      ).join('');
+      return `<div class="p-dragon" aria-hidden="true">${rows}</div>`;
+    }
     case 'peaky':
-      return `<div class="p-stamp">机密</div><div class="p-redact"><i></i><i></i></div>`;
+      return `<div class="p-photos" aria-hidden="true"><i></i><i></i><i></i><span class="p-string"></span></div><div class="p-stamp">机密</div>`;
     case 'life':
       // Win95-ish loader window: 12 segments, 5 lit ≈ the 42% in the caption
       return `<div class="p-loadwin"><div class="p-loadbar">${'<i></i>'.repeat(12)}</div><div class="p-loadtxt">LIFE IS LOADING… 42%</div></div>`;
@@ -70,7 +90,7 @@ function posterHTML(p: Project): string {
     </figure>`;
 }
 
-/** Render the four project posters into #gallery. Call before velocity-skew init. */
+/** Render the project posters (one per PROJECTS entry) into #gallery. Call before velocity-skew init. */
 export function renderGallery() {
   const el = document.getElementById('gallery');
   if (!el) return;
