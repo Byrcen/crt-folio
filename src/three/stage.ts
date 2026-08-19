@@ -15,6 +15,9 @@ const THEMES = {
     key: 0.95,
     spot: 0.4, // a soft pool of light on the TV even by day
     halo: 0.4,
+    window: 2.4, // warm gobo panes on the wall — the day drama
+    glow: 0,
+    dust: 0,
     props: { plastic: 0x2b2823, label: 0xd8cfba, pot: 0x8a5a3a, leaf: 0x4a6b45 },
   },
   night: {
@@ -25,9 +28,24 @@ const THEMES = {
     key: 0.12,
     spot: 1.7,
     halo: 0.85,
+    window: 0,
+    glow: 1.2, // screen light spilling onto the set
+    dust: 0.32, // motes in the spot cone
     props: { plastic: 0x191919, label: 0x555048, pot: 0x4a3626, leaf: 0x2c3d2a },
   },
 };
+
+/** 2×2 bright panes on black — projected by the day window light as a gobo. */
+function windowGobo(): THREE.CanvasTexture {
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 256;
+  const c = cv.getContext('2d')!;
+  c.fillStyle = '#000';
+  c.fillRect(0, 0, 256, 256);
+  c.fillStyle = '#fff';
+  for (const [x, y] of [[28, 28], [140, 28], [28, 140], [140, 140]] as const) c.fillRect(x, y, 88, 88);
+  return new THREE.CanvasTexture(cv);
+}
 
 function haloTexture(): THREE.Texture {
   const cv = document.createElement('canvas');
@@ -58,6 +76,11 @@ export class Stage {
   private key: THREE.DirectionalLight;
   private spot: THREE.SpotLight;
   private halo: THREE.Sprite;
+  private windowLight!: THREE.SpotLight;
+  private glow!: THREE.PointLight;
+  private glowBase = { v: 0 };
+  private dust!: THREE.Points;
+  private reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   private raycaster = new THREE.Raycaster();
   private pointerNdc = new THREE.Vector2(99, 99);
   private mouse = { x: 0, y: 0 }; // -1..1 parallax
@@ -132,6 +155,64 @@ export class Stage {
     this.halo.position.set(0, 1.1, -1.2);
     this.halo.scale.set(4.5, 4.5, 1);
     this.scene.add(this.halo);
+
+    // day window light: warm gobo panes raking across the wall & shelf
+    this.windowLight = new THREE.SpotLight(0xffe6bd, THEMES.day.window, 24, Math.PI / 5.2, 0.32, 1.3);
+    this.windowLight.position.set(-5.2, 3.4, 4.6);
+    this.windowLight.target.position.set(1.1, -0.5, -1.3);
+    this.windowLight.map = windowGobo();
+    this.windowLight.castShadow = true;
+    this.scene.add(this.windowLight, this.windowLight.target);
+
+    // night screen glow spilling onto the set (flickers slightly in tick)
+    this.glow = new THREE.PointLight(0x3fd8c0, 0, 2.6, 1.8);
+    this.glow.position.set(-0.13, 0.1, 0.95);
+    this.scene.add(this.glow);
+
+    // dust motes drifting in the spot cone (night only; fewer on mobile)
+    const dustCount = innerWidth < 768 ? 60 : 120;
+    const dustPos = new Float32Array(dustCount * 3);
+    for (let i = 0; i < dustCount; i++) {
+      dustPos[i * 3] = (Math.random() * 2 - 1) * 1.0;
+      dustPos[i * 3 + 1] = -0.5 + Math.random() * 2.9;
+      dustPos[i * 3 + 2] = -0.5 + Math.random() * 1.6;
+    }
+    const dustGeo = new THREE.BufferGeometry();
+    dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+    this.dust = new THREE.Points(
+      dustGeo,
+      new THREE.PointsMaterial({ size: 0.016, color: 0xfff2d8, transparent: true, opacity: 0, depthWrite: false }),
+    );
+    this.scene.add(this.dust);
+
+    // fake reflection: inverted TV clone with faint no-depth materials, so it
+    // paints over the (solid) shelf as a gloss. Materials are cloned — the
+    // originals stay untouched; the screen texture is shared and stays live.
+    const mirror = this.tv.group.clone(true);
+    mirror.scale.y = -1;
+    mirror.position.y = 2 * -0.54;
+    // 电源线垂到柜面以下，镜像会翻到柜面以上画在墙上——剔除
+    mirror.getObjectByName('cord')?.removeFromParent();
+    mirror.traverse((o) => {
+      o.castShadow = false;
+      o.receiveShadow = false;
+      const m = o as THREE.Mesh;
+      if (m.isMesh) {
+        const mats = (Array.isArray(m.material) ? m.material : [m.material]) as THREE.Material[];
+        const cloned = mats.map((mat) => {
+          const c = mat.clone();
+          c.transparent = true;
+          c.opacity = 0.14;
+          c.depthTest = false;
+          c.depthWrite = false;
+          c.side = THREE.DoubleSide; // scale.y = -1 flips winding
+          return c;
+        });
+        m.material = Array.isArray(m.material) ? cloned : cloned[0];
+        m.renderOrder = 2;
+      }
+    });
+    this.scene.add(mirror);
 
     // events
     addEventListener('resize', () => this.resize());
@@ -209,6 +290,9 @@ export class Stage {
     gsap.to(this.key, { intensity: T.key, duration: dur, ease: 'power2.inOut', overwrite: 'auto' });
     gsap.to(this.spot, { intensity: T.spot, duration: dur, delay: 0.1, ease: 'power2.inOut', overwrite: 'auto' });
     gsap.to(this.halo.material, { opacity: T.halo, duration: dur, delay: 0.1, ease: 'power2.inOut', overwrite: 'auto' });
+    gsap.to(this.windowLight, { intensity: T.window, duration: dur, ease: 'power2.inOut', overwrite: 'auto' });
+    gsap.to(this.glowBase, { v: T.glow, duration: dur, delay: 0.1, ease: 'power2.inOut', overwrite: 'auto' });
+    gsap.to(this.dust.material as THREE.PointsMaterial, { opacity: T.dust, duration: dur, delay: 0.15, ease: 'power2.inOut', overwrite: 'auto' });
   }
 
   /** anchor point for the "Switch Day 'N' Night" label (below the shelf, under the TV) */
@@ -245,6 +329,20 @@ export class Stage {
   private tick(t: number) {
     if (this.paused) return;
     this.screenFX.update(t);
+
+    // night: screen glow breathes; dust drifts down through the spot cone
+    const g = this.glowBase.v;
+    this.glow.intensity = this.reduced ? g : g * (0.93 + 0.07 * Math.sin(t * 0.0113) * Math.sin(t * 0.0047));
+    const dustMat = this.dust.material as THREE.PointsMaterial;
+    if (!this.reduced && dustMat.opacity > 0.01) {
+      const pos = this.dust.geometry.attributes.position as THREE.BufferAttribute;
+      for (let i = 0; i < pos.count; i++) {
+        let y = pos.getY(i) - 0.0005;
+        if (y < -0.5) y = 2.4;
+        pos.setY(i, y);
+      }
+      pos.needsUpdate = true;
+    }
 
     // dolly: accelerate toward the screen, smoothed
     const shaped = Math.pow(this.progress, 1.9);

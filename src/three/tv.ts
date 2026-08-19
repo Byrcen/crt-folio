@@ -125,6 +125,7 @@ export function buildTv(screenTexture: THREE.Texture): Tv {
     new THREE.TubeGeometry(new THREE.CatmullRomCurve3(cordPts), 32, 0.012, 6),
     darkMat,
   );
+  cord.name = 'cord'; // 垂到柜面以下——镜像反射时必须剔除，否则倒影翻上墙
   group.add(cord);
 
   return { group, screen, knob, bodyMat };
