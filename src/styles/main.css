@@ -1247,7 +1247,7 @@ html[data-zone='dark'] #freq-ruler { opacity: 1; }
 #sig-meter {
   position: absolute;
   right: 4vw;
-  bottom: 12vh;
+  bottom: 22vh; /* 高于 about-hint 与固定 HUD 时钟带，避免任何滚动位相撞 */
   display: flex;
   align-items: flex-end;
   gap: 3px;
