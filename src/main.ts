@@ -129,6 +129,50 @@ function initNav() {
 function initScrollFx() {
   const heroHeadline = document.getElementById('hero-headline')!;
 
+  // ----- standby auto channel-change: resting on the test card must not be
+  // a dead end — the set is "on air" and changes channel by itself after a
+  // short hold. Any input cancels; fires at most once per visit; reduced
+  // motion opts out entirely.
+  const SEAM_HOLD = 3200;
+  let standbyRaf = 0;
+  let standbyFired = false;
+  const seamY = () => document.getElementById('hero-spacer')!.offsetHeight - innerHeight;
+  const cancelStandby = () => {
+    if (!standbyRaf) return;
+    cancelAnimationFrame(standbyRaf);
+    standbyRaf = 0;
+    stage?.screenFX.setStandby(null);
+    removeEventListener('wheel', cancelStandby);
+    removeEventListener('touchstart', cancelStandby);
+    removeEventListener('keydown', cancelStandby);
+  };
+  const armStandby = () => {
+    if (reduced || standbyFired || standbyRaf || currentPage !== 'home') return;
+    const t0 = performance.now();
+    addEventListener('wheel', cancelStandby, { passive: true });
+    addEventListener('touchstart', cancelStandby, { passive: true });
+    addEventListener('keydown', cancelStandby);
+    const step = () => {
+      // drifted off the seam (scrolled on, or back up) → stand down
+      if (Math.abs(window.scrollY - seamY()) > 60 || currentPage !== 'home') {
+        cancelStandby();
+        return;
+      }
+      const r = 1 - (performance.now() - t0) / SEAM_HOLD;
+      if (r <= 0) {
+        cancelStandby();
+        standbyFired = true;
+        // riding the existing seam choreography: the scroll itself triggers
+        // NO SIGNAL + zone switch on the way into the content
+        lenis.scrollTo(document.getElementById('about')!, { duration: 1.6 });
+        return;
+      }
+      stage?.screenFX.setStandby(r);
+      standbyRaf = requestAnimationFrame(step);
+    };
+    standbyRaf = requestAnimationFrame(step);
+  };
+
   // hero dolly-in + gentle end-snap: resting mid-zoom is allowed, but once
   // you've clearly leaned toward an end the dolly finishes the "channel
   // change" on its own. A small flick no longer flings you across the spacer,
@@ -144,10 +188,15 @@ function initScrollFx() {
       clearTimeout(snapTimer);
       if (currentPage !== 'home') return;
       const p = self.progress;
-      // only snap while genuinely mid-dolly. At p===0/1 the channel change is
+      // fully docked on the test card → arm the auto channel-change
+      if (p >= 0.999) {
+        armStandby();
+        return;
+      }
+      // only snap while genuinely mid-dolly. At p===0 the channel change is
       // already settled — scheduling a snap there yanks users (and nav jumps
       // that cross the whole spacer in one step) back to the seam.
-      if (p <= 0 || p >= 1) return;
+      if (p <= 0) return;
       let target: number | null = null;
       if (p > 0.6) target = self.end; // past the midpoint, diving in → finish it
       else if (p < 0.15) target = self.start; // barely in → ease back to rest

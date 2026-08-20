@@ -54,6 +54,7 @@
 - **headline "信号调入"**：hero 大标题入场时 RGB 通道错位一闪归位（CSS 一次性动画，text-shadow 双色偏移收敛；`reduced-motion` 直显）。
 - **dolly 信号失稳**：镜头推进时屏幕内容随进度出现垂直滚动失真（v-hold：画面按进度加剧的周期性纵向偏移/撕裂条），暗示"信号即将切换"，与测试卡切入、NO SIGNAL 雪花构成完整叙事链。进度复用 A4 的 `setProgress` 通路；`reduced-motion` 关闭失真。
 - **点击屏幕彩蛋**：`stage` 的 click raycast 命中 `screen` 时（现只处理 knob），屏幕闪一帧雪花噪点并立即切换像素图标（glyph），可反复触发。配一声短 static 音。
+- **待机自动换台**（2026-08-20 作者反馈追加：测试卡不能是等人翻页的死帧，"电视自己会播"）：停留在 dolly 终点约 3.2s 不动时，测试卡上出现倒计时条与「即将自动换台 — 滚动可打断」提示，随后自动滚入正文（沿用接缝既有 NO SIGNAL 编舞）；任何滚动/触摸/按键立即打断；每次访问至多自动一次；reduced-motion 不启用。测试卡本身永不静止：雷达扫线、漂移亮带、走秒时间码、呼吸状态行。
 
 涉及：`index.html`、`src/styles/main.css`、`src/gallery.ts`、`src/about.ts`、少量新 fx 代码
 
