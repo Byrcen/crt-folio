@@ -5,10 +5,10 @@ import { COPY } from '../content';
 /**
  * Live CRT screen content rendered to a CanvasTexture.
  * Draw pipeline: terminal scene (typewriter headline, logs, glyph, crosshair,
- * program-bar marquee) goes into an offscreen buffer; a test card crossfades
- * in as the dolly closes in; the buffer is composited to the texture canvas
- * with a progress-driven v-hold roll; power-on boot and click-egg static are
- * overlaid last.
+ * program-bar marquee) goes into an offscreen buffer; the buffer is composited
+ * to the texture canvas with a progress-driven v-hold roll that destabilizes
+ * mid-dolly and locks back in at the seam; power-on boot and click-egg static
+ * are overlaid last.
  */
 const W = 560;
 const H = 460;
@@ -30,13 +30,6 @@ const GLYPHS: number[][][] = [
   // progress bar
   [[0, 2], [1, 2], [2, 2], [3, 2], [4, 2], [5, 2], [0, 1], [0, 3], [5, 1], [5, 3]],
 ];
-
-// pixel CRY monogram for the test card (mirrors core/logo.ts patterns)
-const MONO_C = ['.####', '#....', '#....', '#....', '#....', '.####'];
-const MONO_R = ['####.', '#...#', '####.', '#.#..', '#..#.', '#...#'];
-const MONO_Y = ['#...#', '#...#', '.#.#.', '..#..', '..#..', '..#..'];
-
-const TESTCARD_BARS = ['#c8c8c8', '#c8b432', '#32b4a0', '#3264b4', '#b43a64', '#1c1c1c'];
 
 const smoothstep = (a: number, b: number, x: number) => {
   const t = Math.min(1, Math.max(0, (x - a) / (b - a)));
@@ -60,7 +53,6 @@ export class ScreenFX {
   private mode: 'live' | 'boot' = 'live';
   private bootT0 = 0;
   private progress = 0; // dolly progress from the stage
-  private standby: number | null = null; // auto channel-change countdown, 1→0
   private eggFlash = 0;
   private reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -100,14 +92,9 @@ export class ScreenFX {
     this.loop.start();
   }
 
-  /** Dolly progress: drives v-hold instability and the test-card crossfade. */
+  /** Dolly progress: drives v-hold instability (peaks mid-dolly, re-locks at the seam). */
   setProgress(p: number) {
     this.progress = p;
-  }
-
-  /** Auto channel-change countdown shown on the test card (null = idle). */
-  setStandby(r: number | null) {
-    this.standby = r;
   }
 
   /** Click egg: one static flash + swap the pixel glyph. */
@@ -136,19 +123,12 @@ export class ScreenFX {
 
     this.drawLive(now);
 
-    // test card crossfades in near the end of the dolly
-    const tc = smoothstep(0.62, 0.78, this.progress);
-    if (tc > 0) {
-      const bc = this.bctx;
-      bc.save();
-      bc.globalAlpha = tc;
-      this.drawTestcard(bc, now);
-      bc.restore();
-    }
-
-    // composite with v-hold roll (fades out once the test card locks in)
+    // composite with v-hold roll: destabilizes mid-dolly, locks back in as
+    // the camera docks at the seam (the resting picture is a stable terminal)
     const c = this.ctx;
-    const k = this.reduced ? 0 : smoothstep(0.22, 0.72, this.progress) * (1 - tc);
+    const k = this.reduced
+      ? 0
+      : smoothstep(0.22, 0.6, this.progress) * (1 - smoothstep(0.72, 0.92, this.progress));
     const roll = k > 0 ? (now * 0.25 * k) % H : 0;
     c.drawImage(this.buf, 0, roll, W, H);
     if (roll > 0) c.drawImage(this.buf, 0, roll - H, W, H); // wrap-around slice above
@@ -320,121 +300,5 @@ export class ScreenFX {
       c.fillStyle = 'rgba(255,255,255,0.03)';
       c.fillRect(0, 0, W, H);
     }
-  }
-
-  /** Classic test card: rings, color bars, crosshair, CH 00 + pixel CRY.
-   *  Never a still frame — the broadcast keeps moving even at rest:
-   *  radar sweep, drifting band, ticking timecode, pulsing status line,
-   *  plus the auto channel-change countdown when armed. */
-  private drawTestcard(c: CanvasRenderingContext2D, now: number) {
-    c.fillStyle = '#0b1512';
-    c.fillRect(0, 0, W, H);
-    c.strokeStyle = 'rgba(63,216,192,0.12)';
-    c.lineWidth = 1;
-    c.beginPath();
-    for (let x = 0.5; x < W; x += 28) {
-      c.moveTo(x, 0);
-      c.lineTo(x, H);
-    }
-    for (let y = 0.5; y < H; y += 28) {
-      c.moveTo(0, y);
-      c.lineTo(W, y);
-    }
-    c.stroke();
-
-    const cx = W / 2;
-    const cy = H / 2 - 26;
-    // calibration rings
-    c.strokeStyle = 'rgba(232,244,240,0.85)';
-    for (const [r, lw] of [[152, 2], [112, 1.4], [72, 1]] as const) {
-      c.lineWidth = lw;
-      c.beginPath();
-      c.arc(cx, cy, r, 0, Math.PI * 2);
-      c.stroke();
-    }
-    // crosshair through the rings
-    c.lineWidth = 1;
-    c.beginPath();
-    c.moveTo(cx - 190, cy);
-    c.lineTo(cx + 190, cy);
-    c.moveTo(cx, cy - 165);
-    c.lineTo(cx, cy + 165);
-    c.stroke();
-
-    // radar sweep — the card is "on air", not a freeze-frame
-    if (!this.reduced) {
-      const ang = now * 0.0011;
-      c.strokeStyle = 'rgba(63,216,192,0.32)';
-      c.lineWidth = 2;
-      c.beginPath();
-      c.moveTo(cx, cy);
-      c.lineTo(cx + Math.cos(ang) * 150, cy + Math.sin(ang) * 150);
-      c.stroke();
-    }
-
-    // pixel CRY monogram in the center
-    const cell = 7;
-    const mono = [MONO_C, MONO_R, MONO_Y];
-    const totalW = (5 * 3 + 2) * cell; // three 5-wide glyphs + 1-cell gaps
-    c.fillStyle = '#3fd8c0';
-    mono.forEach((glyph, gi) => {
-      const ox = cx - totalW / 2 + gi * 6 * cell;
-      for (let gy = 0; gy < 6; gy++) {
-        for (let gx = 0; gx < 5; gx++) {
-          if (glyph[gy][gx] === '#') c.fillRect(ox + gx * cell, cy - 3 * cell + gy * cell, cell - 1, cell - 1);
-        }
-      }
-    });
-
-    // color bars
-    const barY = H - 96;
-    const bw = W / TESTCARD_BARS.length;
-    TESTCARD_BARS.forEach((col, i) => {
-      c.fillStyle = col;
-      c.fillRect(i * bw, barY, Math.ceil(bw), 46);
-    });
-
-    // labels + ticking timecode
-    c.fillStyle = '#e8f4f0';
-    c.font = '600 30px "JetBrains Mono", monospace';
-    c.textBaseline = 'top';
-    c.fillText('CH 00', 24, 20);
-    c.font = '11px "JetBrains Mono", monospace';
-    c.fillStyle = 'rgba(180,210,202,0.6)';
-    c.textAlign = 'right';
-    c.fillText('CRT-FOLIO · 校准中', W - 20, 30);
-    const d = new Date();
-    const pad = (n: number) => String(n).padStart(2, '0');
-    c.fillText(`${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`, W - 20, 48);
-    c.textAlign = 'left';
-    const pulse = this.reduced ? 0.6 : 0.42 + 0.24 * Math.sin(now * 0.004);
-    c.fillStyle = `rgba(180,210,202,${pulse.toFixed(3)})`;
-    c.fillText('SIGNAL OK — 向下滚动换台', 24, H - 30);
-
-    // auto channel-change countdown (armed by main.ts when resting here)
-    if (this.standby !== null) {
-      const bw = W * 0.44;
-      const bx = (W - bw) / 2;
-      const by = barY - 36;
-      c.fillStyle = 'rgba(232,244,240,0.22)';
-      c.fillRect(bx, by, bw, 3);
-      c.fillStyle = '#3fd8c0';
-      c.fillRect(bx, by, bw * Math.max(0, this.standby), 3);
-      c.textAlign = 'center';
-      c.fillStyle = 'rgba(232,244,240,0.85)';
-      c.fillText('即将自动换台 — 滚动可打断', W / 2, by - 20);
-      c.textAlign = 'left';
-    }
-
-    // drifting brightness band (same idiom as the NO SIGNAL snow)
-    if (!this.reduced) {
-      const bandY = ((now / 9) % (H * 1.3)) - H * 0.15;
-      c.fillStyle = 'rgba(255,255,255,0.05)';
-      c.fillRect(0, bandY, W, H * 0.06);
-    }
-
-    // scanlines to match the live layer
-    c.fillStyle = 'rgba(0,0,0,0.16)';
-    for (let sy = 0; sy < H; sy += 4) c.fillRect(0, sy, W, 1);
   }
 }

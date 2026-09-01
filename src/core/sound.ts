@@ -98,9 +98,10 @@ class SoundFX {
 
 export const sound = new SoundFX();
 
-/** Wire hover ticks onto all [data-hover] elements. */
+/** Hover ticks for [data-hover] — delegated so late-built elements work too. */
 export function bindHoverSounds() {
-  document.querySelectorAll<HTMLElement>('[data-hover]').forEach((el) => {
-    el.addEventListener('mouseenter', () => sound.play('tick'));
+  document.addEventListener('pointerover', (e) => {
+    const t = (e.target as Element).closest?.('[data-hover]');
+    if (t && !t.contains(e.relatedTarget as Node)) sound.play('tick');
   });
 }

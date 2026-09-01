@@ -8,8 +8,7 @@ import { runPreloader } from './core/preloader';
 import { playNoSignal } from './fx/nosignal';
 import { domTypeLoop, typeOnce } from './fx/typewriter';
 import { bindScrambleHover } from './fx/scramble';
-import { initSnake } from './fx/snake';
-import { initGalleryDrag } from './fx/skew';
+import { initTheater } from './fx/theater';
 import {
   initLineReveals,
   initPillReveals,
@@ -33,6 +32,9 @@ window.scrollTo(0, 0);
 
 renderGallery(); // build posters before cursor/sound bind [data-hover]
 initScroll();
+// CLI 开场期间锁住滚动：此时滚页会把 hero 推进整段跳过，等面板抬起时
+// 缝隙编排（NO SIGNAL / 分区翻转 / 打字机）会一次性空烧
+lenis.stop();
 initCursor();
 initClock();
 bindScrambleHover();
@@ -54,6 +56,7 @@ const stageReady = (async () => {
       (window as unknown as { __stage: Stage }).__stage = stage;
       (window as unknown as { __ST: typeof ScrollTrigger }).__ST = ScrollTrigger;
       (window as unknown as { __noise: typeof playNoSignal }).__noise = playNoSignal;
+      (window as unknown as { __gsap: typeof gsap }).__gsap = gsap;
     }
   } catch (err) {
     console.warn('WebGL unavailable, hero degraded', err);
@@ -66,7 +69,9 @@ const stageReady = (async () => {
 document.getElementById('sound-toggle')!.addEventListener('click', (e) => {
   const btn = e.currentTarget as HTMLElement;
   btn.classList.toggle('on');
-  sound.enable(btn.classList.contains('on'));
+  const on = btn.classList.contains('on');
+  btn.setAttribute('aria-pressed', String(on));
+  sound.enable(on);
 });
 bindHoverSounds();
 
@@ -82,29 +87,72 @@ function showPage(page: Page) {
   about.hidden = onHome;
   document.getElementById('stage')!.style.display = onHome ? '' : 'none';
   document.getElementById('hero-overlay')!.style.display = onHome ? '' : 'none';
+  // 刻度尺由 #content 的滚动驱动，子页上只会剩一条不动的死刻度
+  const ruler = document.getElementById('freq-ruler');
+  if (ruler) ruler.style.display = onHome ? '' : 'none';
   currentPage = page;
 }
 
-function goTo(page: Page, anchor?: string) {
-  sound.play('static');
-  void playNoSignal(1100);
+// 被隐藏那一页的触发器必须先停用再 refresh：display:none 的子树量出来
+// 全是 0，紧接着的 refresh() 会让它们集体误触发 onEnter —— 首页的
+// steps / 段落揭示 / 打字机会被隔空烧掉，data-foot 会锁死，3D 舞台也会
+// 被幻影 onLeaveBack 重新唤醒，在子页上满帧空转
+const stDisabled = new WeakSet<ScrollTrigger>();
+function syncTriggers(page: Page) {
+  const home = document.getElementById('page-home')!;
+  const about = document.getElementById('page-about')!;
+  ScrollTrigger.getAll().forEach((t) => {
+    const el = t.trigger as Element | undefined;
+    if (!el) return;
+    const inHome = home.contains(el);
+    const inAbout = about.contains(el);
+    if (!inHome && !inAbout) return; // 与页面无关的触发器不动
+    const want = page === 'home' ? inHome : inAbout;
+    const off = stDisabled.has(t);
+    if (want && off) {
+      stDisabled.delete(t);
+      t.enable();
+    } else if (!want && !off) {
+      stDisabled.add(t);
+      t.disable(false);
+    }
+  });
+}
+
+// 子页动画在 [hidden] 状态下建立会立刻烧完 —— 首次真正进入时才初始化
+let aboutInited = false;
+
+function goTo(page: Page, anchor?: string, fromPop = false) {
+  // 接管后退键：不改 URL（本站无深链语义），只补一条历史记录，
+  // 否则在「关于我」子页按后退会直接离开本站
+  if (!fromPop) history.pushState({ page, anchor }, '', location.href);
+  void playNoSignal(1100); // 静电声由 playNoSignal 自己发，避免重复
   setTimeout(() => {
     showPage(page);
-    if (page === 'about') {
-      stage?.setPaused(true);
-      document.documentElement.dataset.zone = 'dark';
-      lenis.scrollTo(0, { immediate: true });
-    } else {
-      document.documentElement.dataset.zone = anchor ? 'dark' : 'hero';
-      stage?.setPaused(!!anchor);
-      const target = anchor ? document.querySelector(anchor) : 0;
-      lenis.scrollTo((target as HTMLElement) ?? 0, { immediate: true });
+    syncTriggers(page);
+    if (page === 'about' && !aboutInited) {
+      aboutInited = true;
+      initAboutPage();
     }
+    const dark = page === 'about' || !!anchor;
+    document.documentElement.dataset.zone = dark ? 'dark' : 'hero';
+    stage?.setPaused(dark);
+    // 离开首页时清掉页脚态，否则底部 HUD 在子页上整排隐形
+    if (page === 'about') document.documentElement.removeAttribute('data-foot');
+    // 先量后跳：refresh / lenis 尺寸缓存更新之前，锚点会落到旧坐标上
     ScrollTrigger.refresh();
+    lenis.resize();
+    const target = page === 'home' && anchor ? document.querySelector(anchor) : null;
+    lenis.scrollTo((target as HTMLElement) ?? 0, { immediate: true, force: true });
   }, 450);
 }
 
 function initNav() {
+  history.replaceState({ page: 'home' as Page }, '', location.href);
+  addEventListener('popstate', (e) => {
+    const st = e.state as { page?: Page; anchor?: string } | null;
+    goTo(st?.page ?? 'home', st?.anchor, true);
+  });
   document.querySelectorAll<HTMLAnchorElement>('#hud-nav a').forEach((a) => {
     a.addEventListener('click', (e) => {
       e.preventDefault();
@@ -129,50 +177,6 @@ function initNav() {
 function initScrollFx() {
   const heroHeadline = document.getElementById('hero-headline')!;
 
-  // ----- standby auto channel-change: resting on the test card must not be
-  // a dead end — the set is "on air" and changes channel by itself after a
-  // short hold. Any input cancels; fires at most once per visit; reduced
-  // motion opts out entirely.
-  const SEAM_HOLD = 3200;
-  let standbyRaf = 0;
-  let standbyFired = false;
-  const seamY = () => document.getElementById('hero-spacer')!.offsetHeight - innerHeight;
-  const cancelStandby = () => {
-    if (!standbyRaf) return;
-    cancelAnimationFrame(standbyRaf);
-    standbyRaf = 0;
-    stage?.screenFX.setStandby(null);
-    removeEventListener('wheel', cancelStandby);
-    removeEventListener('touchstart', cancelStandby);
-    removeEventListener('keydown', cancelStandby);
-  };
-  const armStandby = () => {
-    if (reduced || standbyFired || standbyRaf || currentPage !== 'home') return;
-    const t0 = performance.now();
-    addEventListener('wheel', cancelStandby, { passive: true });
-    addEventListener('touchstart', cancelStandby, { passive: true });
-    addEventListener('keydown', cancelStandby);
-    const step = () => {
-      // drifted off the seam (scrolled on, or back up) → stand down
-      if (Math.abs(window.scrollY - seamY()) > 60 || currentPage !== 'home') {
-        cancelStandby();
-        return;
-      }
-      const r = 1 - (performance.now() - t0) / SEAM_HOLD;
-      if (r <= 0) {
-        cancelStandby();
-        standbyFired = true;
-        // riding the existing seam choreography: the scroll itself triggers
-        // NO SIGNAL + zone switch on the way into the content
-        lenis.scrollTo(document.getElementById('about')!, { duration: 1.6 });
-        return;
-      }
-      stage?.screenFX.setStandby(r);
-      standbyRaf = requestAnimationFrame(step);
-    };
-    standbyRaf = requestAnimationFrame(step);
-  };
-
   // hero dolly-in + gentle end-snap: resting mid-zoom is allowed, but once
   // you've clearly leaned toward an end the dolly finishes the "channel
   // change" on its own. A small flick no longer flings you across the spacer,
@@ -188,18 +192,16 @@ function initScrollFx() {
       clearTimeout(snapTimer);
       if (currentPage !== 'home') return;
       const p = self.progress;
-      // fully docked on the test card → arm the auto channel-change
-      if (p >= 0.999) {
-        armStandby();
-        return;
-      }
+      if (p >= 0.999) return; // docked at the seam — settled, nothing to snap
       // only snap while genuinely mid-dolly. At p===0 the channel change is
       // already settled — scheduling a snap there yanks users (and nav jumps
       // that cross the whole spacer in one step) back to the seam.
       if (p <= 0) return;
       let target: number | null = null;
       if (p > 0.6) target = self.end; // past the midpoint, diving in → finish it
-      else if (p < 0.15) target = self.start; // barely in → ease back to rest
+      // 只在真的往回退时才吸回起点：否则一次方向键（约 40px，p≈0.09）
+      // 会被立刻拽回 0，键盘用户永远出不了 hero
+      else if (p < 0.15 && self.direction < 0) target = self.start;
       if (target === null) return; // 0.15–0.6 is a free rest zone
       snapTimer = window.setTimeout(() => {
         lenis.scrollTo(target!, { duration: 1.1, easing: (t: number) => 1 - Math.pow(1 - t, 3) });
@@ -211,14 +213,8 @@ function initScrollFx() {
   ScrollTrigger.create({
     trigger: '#content',
     start: 'top bottom',
-    onEnter: () => {
-      sound.play('static');
-      void playNoSignal(900);
-    },
-    onLeaveBack: () => {
-      sound.play('static');
-      void playNoSignal(700);
-    },
+    onEnter: () => void playNoSignal(900),
+    onLeaveBack: () => void playNoSignal(700),
   });
 
   // HUD goes light over dark content; stage pauses when covered
@@ -287,11 +283,10 @@ function initScrollFx() {
   });
   initManifestoEcho(echo);
 
-  if (!reduced) initSnake(document.getElementById('snake') as HTMLCanvasElement);
   initSteps();
   initLineReveals();
   initWorksTitle();
-  initGalleryDrag();
+  initTheater();
   initFootBox();
   initPillReveals();
 }
@@ -321,6 +316,8 @@ function trackSwitchLabel() {
       label.style.opacity = visible ? '1' : '0';
       // it's clickable now — a faded-out label must not leave a ghost hit area
       label.style.pointerEvents = visible ? 'auto' : 'none';
+      // opacity:0 依然可聚焦 —— 隐形的 tab 停靠点按回车会静默切换主题
+      label.style.visibility = visible ? '' : 'hidden';
     }
     requestAnimationFrame(tick);
   };
@@ -354,6 +351,10 @@ function initEmailCopy() {
 // ---------- boot ----------
 const ready = Promise.all([document.fonts.ready, stageReady, new Promise((r) => setTimeout(r, 300))]);
 runPreloader(ready).then(() => {
+  // 解锁并归零：lenis.stop() 拦不住键盘与拖动滚动条，且 lenis 会把
+  // 内部 targetScroll 动画回旧值 —— 必须用 immediate 重置它自己的目标
+  lenis.start();
+  lenis.scrollTo(0, { immediate: true, force: true });
   // the CLI "enter" turns the set on: power-on sweep + headline tunes in
   stage?.powerOnScreen();
   sound.play('poweron');
@@ -361,10 +362,24 @@ runPreloader(ready).then(() => {
   stage?.onScreenClick(() => sound.play('zap'));
   initScrollFx();
   initBroadcastLayer();
-  initAboutPage();
   trackSwitchLabel();
   initNav();
   initEmailCopy();
   ScrollTrigger.refresh();
   gsap.set('#hud', { opacity: 1 });
+  // 断点切换导致的重载：回到读者原先所在的章节，而不是被扔回 hero
+  try {
+    const resume = sessionStorage.getItem('crt-resume');
+    if (resume) {
+      sessionStorage.removeItem('crt-resume');
+      const sec = document.getElementById(resume);
+      if (sec) {
+        document.documentElement.dataset.zone = 'dark';
+        stage?.setPaused(true);
+        lenis.scrollTo(sec, { immediate: true, force: true });
+      }
+    }
+  } catch {
+    /* 隐私模式下不可用 */
+  }
 });

@@ -63,7 +63,7 @@
       <canvas id="hud-logo" width="76" height="28" data-hover role="button" tabindex="0" aria-label="回到首页"></canvas>
       <div id="hud-right">
         <span class="mono-label">声音</span>
-        <button id="sound-toggle" data-hover aria-label="切换声音"><i></i></button>
+        <button id="sound-toggle" data-hover aria-label="切换声音" aria-pressed="false"><i></i></button>
       </div>
       <div id="hud-comment" class="mono-label">// 站在 AI 与产品的交汇点</div>
       <div id="hud-scroll" class="mono-label">向下滚动 <b>■</b></div>
@@ -80,7 +80,6 @@
       <div id="content">
         <!-- About / positioning -->
         <section id="about">
-          <canvas id="snake" aria-hidden="true"></canvas>
           <span class="ch-badge mono-label" aria-hidden="true">CH 01 · 关于</span>
           <h2 id="about-title" class="type-title"></h2>
           <ul id="steps">
@@ -117,7 +116,7 @@
           </div>
           <div id="gallery-pin">
             <div id="gallery"><!-- rendered from PROJECTS in src/gallery.ts --></div>
-            <span id="drag-hint" class="mono-label">⟵ 拖动浏览 ⟶</span>
+            <span id="drag-hint" class="mono-label">拖拽 / 滚轮 / ← → 旋转展台</span>
           </div>
         </section>
 

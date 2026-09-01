@@ -222,8 +222,11 @@ export class Stage {
       this.mouse.x = (e.clientX / innerWidth) * 2 - 1;
       this.mouse.y = (e.clientY / innerHeight) * 2 - 1;
     });
-    addEventListener('click', () => {
+    addEventListener('click', (e) => {
       if (this.paused) return;
+      // 监听挂在 window 上：HUD / 覆盖层上的点击不该穿透到 3D 去 raycast
+      const t = e.target as Element | null;
+      if (t?.closest?.('#hud, #hero-overlay, #page-about')) return;
       const hit = this.raycast();
       if (hit === 'knob') this.onKnob?.();
       else if (hit === 'screen') {
@@ -337,6 +340,9 @@ export class Stage {
   private resize() {
     this.camera.aspect = innerWidth / innerHeight;
     this.camera.updateProjectionMatrix();
+    // 跨显示器拖窗后 devicePixelRatio 会变：不跟就永远糊着（或过采样）
+    const dpr = Math.min(devicePixelRatio, innerWidth < 768 ? 1.5 : 2);
+    if (dpr !== this.renderer.getPixelRatio()) this.renderer.setPixelRatio(dpr);
     this.renderer.setSize(innerWidth, innerHeight);
   }
 

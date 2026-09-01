@@ -3,10 +3,13 @@
  * black → navy glitch band → rolling bright band → blue-white flash
  * → snow static with eroded NO SIGNAL caps → fade out.
  */
+import { sound } from '../core/sound';
+
 let playing = false;
 
 export function playNoSignal(durationMs = 1000): Promise<void> {
   if (playing) return Promise.resolve();
+  sound.play('static'); // 声画同源：被重入守卫吞掉的调用不会只剩声音
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     return fadeOnly();
   }
@@ -136,6 +139,6 @@ function fadeOnly(): Promise<void> {
       cv.style.display = 'none';
       cv.style.background = 'transparent';
       r();
-    }, 250),
+    }, 600),
   );
 }

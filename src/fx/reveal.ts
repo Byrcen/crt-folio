@@ -8,10 +8,12 @@ export function initLineReveals() {
     // so they don't get announced one character at a time.
     const text = (el.textContent ?? '').trim().replace(/\s+/g, ' ');
     const tokens = text.match(/[一-鿿　-〿，。—·]|[^\s一-鿿　-〿，。—·]+|\s/g) ?? [];
-    el.setAttribute('aria-label', text);
-    el.innerHTML = `<span aria-hidden="true">${tokens
+    // 不加 aria-label / aria-hidden：aria-label 在 <p>/<div> 这类非交互
+    // 元素上无效，配合 aria-hidden 的包裹层会让读屏把整段读成空白。
+    // 拆出来的 span 是 display:inline，辅助技术会自动拼回原句
+    el.innerHTML = tokens
       .map((t) => (t === ' ' ? ' ' : `<span class="rw">${t}</span>`))
-      .join('')}</span>`;
+      .join('');
     const spans = el.querySelectorAll('.rw');
     gsap.fromTo(
       spans,

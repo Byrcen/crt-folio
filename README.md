@@ -37,13 +37,13 @@ src/
   about.ts           关于子页：蓝图线稿、能力高亮、入场动画
   core/    cursor · clock · scroll(Lenis+ScrollTrigger) · preloader · logo · sound
   three/   stage(场景/灯光/日夜) · tv(程序化电视) · screen(canvas纹理)
-  fx/      typewriter · scramble · nosignal · snake · skew · reveal
+  fx/      typewriter · scramble · nosignal · theater · reveal
   styles/  main.css
 docs/superpowers/specs/   设计文档与逐帧交互规格
 ```
 
 ## 状态
 
-首页与关于子页均已完成。精选作品收录六个真实项目（暗日地下城 / 拼豆 / 血与火 / 浴血黑帮 / 人生进度条 / 辩论赛计时器），电脑端横向拖拽浏览、移动端竖向堆叠，整张海报可点击跳转 demo 或源码。
+首页与关于子页均已完成。精选作品收录六个真实项目（暗日地下城 / 拼豆 / 血与火 / 浴血黑帮 / 人生进度条 / 辩论赛计时器）。电脑端为"环形展台"：六张海报装进深色广播画框（青色对位角标 + 正前位 ON AIR）站上 3D 圆环，竖向滚动 / 横向拖拽 / 滚轮 / ←→ 驱动环旋转，顶光固定打在正前位（转进光锥的被照亮、背面透出电视机背板剪影），吸附对正时光束回弹 + 频道角标跳号，正前作品的说明与源码固定显示在台下说明档；移动端与 reduced-motion 竖向堆叠。整张海报可点击跳转 demo 或源码。
 
 部分个人介绍文案仍为初稿，待替换。已部署于 Vercel：<https://crt-folio.vercel.app>。

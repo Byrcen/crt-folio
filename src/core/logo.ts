@@ -9,6 +9,7 @@ export function initLogo(canvas: HTMLCanvasElement) {
   const cell = 4;
   const cols = 17; // 5 + gap + 5 + gap + 5
   const rows = 6;
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const pixels: [number, number][] = [];
   for (let y = 0; y < rows; y++) {
@@ -25,7 +26,8 @@ export function initLogo(canvas: HTMLCanvasElement) {
   const draw = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = color();
-    const mode = Math.random();
+    // reduced-motion：恒走完整字标分支，每帧像素一致（颜色仍随日夜翻转）
+    const mode = reduced ? 0 : Math.random();
     const ox = (canvas.width - cols * cell) / 2;
     if (mode < 0.82) {
       // full monogram — the brand mark should read clearly most of the time
