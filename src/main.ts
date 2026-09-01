@@ -192,16 +192,21 @@ function initScrollFx() {
       clearTimeout(snapTimer);
       if (currentPage !== 'home') return;
       const p = self.progress;
-      if (p >= 0.999) return; // docked at the seam — settled, nothing to snap
       // only snap while genuinely mid-dolly. At p===0 the channel change is
       // already settled — scheduling a snap there yanks users (and nav jumps
       // that cross the whole spacer in one step) back to the seam.
       if (p <= 0) return;
       let target: number | null = null;
-      if (p > 0.6) target = self.end; // past the midpoint, diving in → finish it
-      // 只在真的往回退时才吸回起点：否则一次方向键（约 40px，p≈0.09）
-      // 会被立刻拽回 0，键盘用户永远出不了 hero
-      else if (p < 0.15 && self.direction < 0) target = self.start;
+      if (self.direction < 0) {
+        // 往回退：只要离开了中段自由区就吸回电视静止位。缝隙附近（p 接近 1）
+        // 尤其不能停 —— 那一帧是推进到底后的屏幕内部（底图 + 放大准星），
+        // 不该被当成一页看到
+        if (p < 0.15 || p > 0.6) target = self.start;
+      } else if (p > 0.6) {
+        // 往下推进过半：不停在缝隙，直接滑进 CH 01（NO SIGNAL 在途中触发）。
+        // self.end 是 spacer 底贴视口底，再加一个视口高即内容区顶贴视口顶
+        target = self.end + innerHeight;
+      }
       if (target === null) return; // 0.15–0.6 is a free rest zone
       snapTimer = window.setTimeout(() => {
         lenis.scrollTo(target!, { duration: 1.1, easing: (t: number) => 1 - Math.pow(1 - t, 3) });
