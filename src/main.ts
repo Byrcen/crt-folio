@@ -8,7 +8,7 @@ import { runPreloader } from './core/preloader';
 import { playNoSignal } from './fx/nosignal';
 import { domTypeLoop, typeOnce } from './fx/typewriter';
 import { bindScrambleHover } from './fx/scramble';
-import { initTheater } from './fx/theater';
+import { initTheater, THEATER_INTRO } from './fx/theater';
 import {
   initLineReveals,
   initPillReveals,
@@ -143,7 +143,10 @@ function goTo(page: Page, anchor?: string, fromPop = false) {
     ScrollTrigger.refresh();
     lenis.resize();
     const target = page === 'home' && anchor ? document.querySelector(anchor) : null;
-    lenis.scrollTo((target as HTMLElement) ?? 0, { immediate: true, force: true });
+    // 直达作品区：越过开机段，落在画面全开、第一台在光下的位置（竖向堆叠形态没有开机段）
+    const theaterOn = !!document.querySelector('#gallery-pin.theater');
+    const offset = anchor === '#works' && theaterOn ? Math.round(innerHeight * THEATER_INTRO) : 0;
+    lenis.scrollTo((target as HTMLElement) ?? 0, { immediate: true, force: true, offset });
   }, 450);
 }
 

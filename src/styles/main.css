@@ -513,6 +513,22 @@ section { position: relative; overflow: hidden; }
   margin: 0 0 0.25em;
   justify-self: end;
 }
+/* 开机式展开：钉住后滚动把整幅舞台画面从中间一条待机亮线上下撑开（clip 与过曝
+   由 JS 驱动），两道边缘贴着荧光 */
+.th-phos {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 2px;
+  z-index: 8;
+  pointer-events: none;
+  background: #f2fffa;
+  box-shadow:
+    0 0 8px 2px rgba(210, 255, 240, 0.9),
+    0 0 26px 8px rgba(120, 225, 200, 0.45);
+  opacity: 0;
+}
 /* 压暗遮罩：光照强弱由 JS 驱动其透明度（.work 挂 filter 会压平 3D） */
 .th-shade {
   position: absolute;

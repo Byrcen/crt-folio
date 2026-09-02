@@ -5,11 +5,16 @@ import { sound } from '../core/sound';
  * 环形展台：作品区钉住整屏，六张海报（CRT 机壳装裱）站上一个 3D 圆环，
  * 竖向滚动 / 横向拖拽 / 滚轮 / ← → 都驱动环旋转；顶光固定打在正前位，
  * 环从光下转过 —— 转进光锥的被照亮，转到背面的只剩电视机背板的剪影。
+ * 入场是开机：钉住后先用半个视口高的滚动把整幅舞台画面从中间一条待机亮线
+ * 上下撑开（荧光边 + 过曝回落），画面一开始撑开环就转进光下，全开后才进入转环。
  * 跨过一台放一声刻度音；停手吸附对正时光束回弹 + 旋钮声。进出展台不打雪花，
  * 静电只属于缝隙与导航的换台。
  * 正前作品的说明与源码链接固定显示在台下的说明档（不随环旋转）。
  * 移动端与 reduced-motion 不进展台，走 CSS 竖向堆叠。
  */
+/** 开机段占的滚动量（视口高的倍数）：导航直达作品区时要跳过它，落在画面全开处 */
+export const THEATER_INTRO = 0.5;
+
 export function initTheater() {
   const viewport = document.getElementById('gallery-pin');
   const track = document.getElementById('gallery');
@@ -50,6 +55,8 @@ export function initTheater() {
   const N = works.length;
   const STEPA = 360 / N; // 相邻两台的圆心角
   const PER = 0.6; // 每转一台占 0.6 个视口高的滚动量
+  const INTRO = THEATER_INTRO; // 开机段：钉住后先用半个视口高的滚动把画面撑开
+  const introFrac = INTRO / ((N - 1) * PER + INTRO); // 开机段占钉住区间的比例
 
   // ---------- 舞台道具（仅桌面端存在，故由 JS 构建而非写进 HTML） ----------
   const make = (cls: string) => {
@@ -63,6 +70,8 @@ export function initTheater() {
   const floor = make('th-floor');
   void floor;
   const pool = make('th-pool');
+  // 开机亮线：画面上下两道边缘的荧光，随 clip 边界移动；待机时是中间一条暗线
+  const phos = [make('th-phos'), make('th-phos')];
   const badge = make('th-ch mono-label');
   badge.setAttribute('aria-hidden', 'true');
   const ticks = make('th-ticks');
@@ -194,7 +203,7 @@ export function initTheater() {
   const st = ScrollTrigger.create({
     trigger: viewport,
     start: 'top top',
-    end: () => '+=' + Math.round(innerHeight * (N - 1) * PER),
+    end: () => '+=' + Math.round(innerHeight * ((N - 1) * PER + INTRO)),
     pin: true,
     onUpdate: (self) => {
       // 子页把 #page-home 藏起来后触发器区间塌缩到页顶：此时的一切
@@ -204,24 +213,36 @@ export function initTheater() {
         return;
       }
       clearTimeout(snapT);
-      if (self.progress > 0.001 && self.progress < 0.999 && !dragging) {
-        // 棘轮式吸附：顺着滚动方向进位 —— 滚轮轻拨一下也换到下一台，
-        // 而不是被"就近吸附"拽回原位（那会让滚轮显得没有反应）
-        const dirn = self.direction;
+      if (dragging || self.progress <= 0.001 || self.progress >= 0.999) return;
+      if (self.progress < introFrac) {
+        // 开机段停手：不停在半开 —— 要么关回待机，要么开到底
+        const o = self.progress / introFrac;
         snapT = window.setTimeout(() => {
-          const s = st.progress * (N - 1);
-          let slot = Math.round(s);
-          if (dirn > 0) slot = Math.min(N - 1, Math.ceil(s - 0.12));
-          else if (dirn < 0) slot = Math.max(0, Math.floor(s + 0.12));
-          const target = st.start + slotSpan() * slot;
-          if (Math.abs(window.scrollY - target) > 6) lenis.scrollTo(target, { duration: 0.6 });
+          lenis.scrollTo(o < 0.35 ? st.start : rotStart(), { duration: 0.6 });
         }, 240);
+        return;
       }
+      // 棘轮式吸附：顺着滚动方向进位 —— 滚轮轻拨一下也换到下一台，
+      // 而不是被"就近吸附"拽回原位（那会让滚轮显得没有反应）
+      const dirn = self.direction;
+      snapT = window.setTimeout(() => {
+        const s = rot() * (N - 1);
+        let slot = Math.round(s);
+        if (dirn > 0) slot = Math.min(N - 1, Math.ceil(s - 0.12));
+        else if (dirn < 0) slot = Math.max(0, Math.floor(s + 0.12));
+        const target = rotStart() + slotSpan() * slot;
+        if (Math.abs(window.scrollY - target) > 6) lenis.scrollTo(target, { duration: 0.6 });
+      }, 240);
     },
   });
 
-  const slotSpan = () => (st.end - st.start) / (N - 1);
-  const clampScroll = (y: number) => Math.max(st.start, Math.min(st.end, y));
+  const rotStart = () => st.start + Math.round(innerHeight * INTRO); // 转环段起点（画面全开）
+  const slotSpan = () => (st.end - rotStart()) / (N - 1);
+  const clampScroll = (y: number) => Math.max(rotStart(), Math.min(st.end, y));
+  /** 开机进度 0..1：画面撑开的程度 */
+  const open = () => Math.max(0, Math.min(1, st.progress / introFrac));
+  /** 转环进度 0..1：扣掉开机段 */
+  const rot = () => Math.max(0, Math.min(1, (st.progress - introFrac) / (1 - introFrac)));
 
   // 展台是否"在场"：可见、且滚动位在钉住区间附近（含首末台的静止点）
   const inTheater = () =>
@@ -235,7 +256,7 @@ export function initTheater() {
   const scrollToSlot = (i: number, dur = 0.7) => {
     const slot = Math.max(0, Math.min(N - 1, i));
     pendingSlot = slot;
-    lenis.scrollTo(st.start + slotSpan() * slot, { duration: dur });
+    lenis.scrollTo(rotStart() + slotSpan() * slot, { duration: dur });
   };
   const targetSlot = () => (pendingSlot >= 0 ? pendingSlot : Math.max(0, front));
   const step = (d: number) => {
@@ -250,12 +271,50 @@ export function initTheater() {
   let entered = false;
   let lockedAt = -1;
 
+  // ---------- 开机式展开 ----------
+  // 画面 = 整个钉住视口（招牌、光、环、台面一起）。o=0 待机：只露中间一条暗线；
+  // 撑开过程中两道边缘亮起荧光，刚撑开时过曝再回落；全开后撤掉 clip 与滤镜
+  const ss = (a: number, b: number, x: number) => {
+    const t = Math.max(0, Math.min(1, (x - a) / (b - a)));
+    return t * t * (3 - 2 * t);
+  };
+  let lastOpen = -1;
+  const reveal = (o: number, prev: number) => {
+    if (o >= 1) {
+      viewport.classList.remove('booting');
+      viewport.style.clipPath = '';
+      viewport.style.filter = '';
+      phos.forEach((p) => (p.style.opacity = '0'));
+      return;
+    }
+    if (o > 0.02 && prev <= 0.02) sound.play('poweron'); // 只在从待机拧开时响
+    viewport.classList.add('booting');
+    const tall = ss(0, 1, o);
+    const v = 50 * (1 - tall);
+    const edge = tall > 0.001 ? `${v.toFixed(3)}%` : 'calc(50% - 1px)';
+    viewport.style.clipPath = `inset(${edge} 0)`;
+    // 过曝：刚撑开时画面发白，逐渐回落
+    const bloom = 1 + 0.9 * ss(0.02, 0.15, o) * (1 - ss(0.15, 0.9, o));
+    viewport.style.filter = bloom > 1.01 ? `brightness(${bloom.toFixed(3)})` : '';
+    phos[0].style.top = edge;
+    phos[1].style.bottom = edge;
+    // 待机时那条线就带着画面的一丝色彩（真 CRT 收成一条线时也这样），别太暗以免像断线
+    const glow = (0.45 + 0.55 * ss(0, 0.15, o)) * (1 - ss(0.85, 1, o));
+    phos.forEach((p) => (p.style.opacity = glow.toFixed(3)));
+  };
+
   let lastRot = NaN;
   let lastR = NaN;
   const update = () => {
     if (!visible()) return;
     if (needLayout) layout(); // 子页期间被 resize 打坏的几何在这里自愈
-    const rotTarget = -st.progress * (N - 1) * STEPA + entra;
+    const o = open();
+    if (o !== lastOpen) {
+      reveal(o, lastOpen);
+      lastOpen = o;
+    }
+    if (!entered && o > 0.2) enter(); // 画面一开始撑开，环就转进光下
+    const rotTarget = -rot() * (N - 1) * STEPA + entra;
     rotCur += (rotTarget - rotCur) * 0.14;
     if (Math.abs(rotTarget - rotCur) < 0.01) rotCur = rotTarget;
     if (rotCur === lastRot && R === lastR) return; // 静止帧无事可做
@@ -279,15 +338,15 @@ export function initTheater() {
     });
 
     // 招牌上的那句说明只在开台时读一遍：首次转环即淡出，只留章节标与标题
-    if (intro) intro.style.opacity = Math.max(0, 1 - (st.progress * (N - 1)) / 0.5).toFixed(3);
+    if (intro) intro.style.opacity = Math.max(0, 1 - (rot() * (N - 1)) / 0.5).toFixed(3);
 
     if (entered) {
       // 台位跟随滚动这个单一事实来源（rotCur 掺着入场偏转和 lerp 滞后）
-      const slot = Math.max(0, Math.min(N - 1, Math.round(st.progress * (N - 1))));
+      const slot = Math.max(0, Math.min(N - 1, Math.round(rot() * (N - 1))));
       if (slot !== front) setFront(slot);
       // 吸附对正的"锁定"反馈：光束回弹 + 旋钮声（不打雪花）
-      const s = st.progress * (N - 1);
-      const atSlot = Math.abs(s - Math.round(s)) < 0.02 || st.progress < 0.001 || st.progress > 0.999;
+      const s = rot() * (N - 1);
+      const atSlot = Math.abs(s - Math.round(s)) < 0.02 || rot() <= 0 || rot() >= 1;
       const settled = Math.abs(rotTarget - rotCur) < 0.4 && entra === 0;
       if (settled && atSlot) {
         if (lockedAt !== front) {
@@ -303,13 +362,10 @@ export function initTheater() {
   };
   gsap.ticker.add(update);
 
-  // 临近入场：环带着第一台从侧面转进光下。路由切子页时 refresh 会误触
-  // 幻影 onEnter（此时不可见，不 kill、保持待命）；从子页经「作品/联系」
-  // 返回时不会再产生 onEnter（内部状态已是 past）—— 用 onRefresh 补位，
-  // goTo() 恢复显示后调用的 ScrollTrigger.refresh() 会走到这里
+  // 入场：环带着第一台从侧面转进光下。由每帧的 update 在画面开始撑开时调用
+  //（跳过开机段直接落在钉住区之后的锚点跳转，也会在首帧因 o=1 立即入场）
   gsap.set(beams, { opacity: 0 });
   gsap.set(pool, { opacity: 0 });
-  let entryTrig: ScrollTrigger | null = null;
   const enter = () => {
     if (entered || !visible()) return;
     entered = true;
@@ -324,16 +380,7 @@ export function initTheater() {
       onUpdate: () => (entra = proxy.v),
       onComplete: () => (entra = 0),
     });
-    entryTrig?.kill();
   };
-  entryTrig = ScrollTrigger.create({
-    trigger: viewport,
-    start: 'top 75%',
-    onEnter: enter,
-    onRefresh: (self) => {
-      if (self.progress > 0) enter();
-    },
-  });
 
   // ---------- 输入：键盘 / 横向滚轮 / 拖拽 / 点击侧位 ----------
   // ← → 换台；↑ ↓ / PgUp PgDn 在展台内也按台步进（原生 40px 步长会被
@@ -342,7 +389,8 @@ export function initTheater() {
     if (e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return; // 浏览器快捷键放行
     if (!inTheater()) return;
     // 钉住区外放行原生滚动：±2px 容差留给 Lenis 的小数滚动位
-    if (window.scrollY < st.start - 2 || window.scrollY > st.end + 2) return;
+    // 开机段放行原生滚动（方向键也能拧开画面）
+    if (window.scrollY < rotStart() - 2 || window.scrollY > st.end + 2) return;
     if (e.key === 'ArrowRight') {
       e.preventDefault();
       step(1);
@@ -367,7 +415,7 @@ export function initTheater() {
       e.preventDefault();
       e.stopPropagation(); // 不让 Lenis 对同一事件再驱动一次滚动
       if (!inTheater()) return;
-      if (window.scrollY < st.start || window.scrollY > st.end) return; // 未入钉住区不瞬移
+      if (window.scrollY < rotStart() || window.scrollY > st.end) return; // 未入转环段不瞬移
       pendingSlot = -1; // 用户接管，放弃排队中的目标
       lenis.scrollTo(clampScroll(window.scrollY + e.deltaX * (slotSpan() / 300)), { immediate: true });
     },
@@ -398,7 +446,7 @@ export function initTheater() {
     lastX = e.clientX;
     moved = Math.max(moved, Math.abs(e.clientX - downX));
     if (!inTheater() || !dx) return;
-    if (window.scrollY < st.start || window.scrollY > st.end) return; // 未入钉住区不瞬移
+    if (window.scrollY < rotStart() || window.scrollY > st.end) return; // 未入转环段不瞬移
     // dx→圆心角→滚动位：右拨环右转，左边那台进光
     const dRot = dx * 0.22;
     lenis.scrollTo(clampScroll(window.scrollY - (dRot / STEPA) * slotSpan()), { immediate: true });
