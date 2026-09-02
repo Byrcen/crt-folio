@@ -696,18 +696,6 @@ section { position: relative; overflow: hidden; }
   filter: blur(8px);
   mix-blend-mode: screen;
 }
-/* 台内雪花（换台一闪） */
-.th-static {
-  position: absolute;
-  inset: 0;
-  z-index: 6;
-  display: none;
-  width: 100%;
-  height: 100%;
-  opacity: 0.92;
-  pointer-events: none;
-  image-rendering: pixelated;
-}
 /* 频道角标：跳台闪现（下移避开 HUD 声音开关） */
 .th-ch {
   position: absolute;

@@ -5,7 +5,8 @@ import { sound } from '../core/sound';
  * 环形展台：作品区钉住整屏，六张海报（CRT 机壳装裱）站上一个 3D 圆环，
  * 竖向滚动 / 横向拖拽 / 滚轮 / ← → 都驱动环旋转；顶光固定打在正前位，
  * 环从光下转过 —— 转进光锥的被照亮，转到背面的只剩电视机背板的剪影。
- * 跨过一台放一声刻度音；停手吸附对正时光束回弹 + 台内雪花轻闪 + 旋钮声。
+ * 跨过一台放一声刻度音；停手吸附对正时光束回弹 + 旋钮声。进出展台不打雪花，
+ * 静电只属于缝隙与导航的换台。
  * 正前作品的说明与源码链接固定显示在台下的说明档（不随环旋转）。
  * 移动端与 reduced-motion 不进展台，走 CSS 竖向堆叠。
  */
@@ -72,9 +73,6 @@ export function initTheater() {
   // 屏幕阅读器的换台播报
   const live = make('th-live sr-only');
   live.setAttribute('aria-live', 'polite');
-  const staticCv = document.createElement('canvas');
-  staticCv.className = 'th-static';
-  viewport.appendChild(staticCv);
 
   const zone = (dir: -1 | 1) => {
     const b = document.createElement('button');
@@ -159,41 +157,6 @@ export function initTheater() {
   layout();
   addEventListener('resize', layout);
 
-  // ---------- 台内雪花（轻量短闪，区别于整页 NO SIGNAL） ----------
-  let staticUntil = 0;
-  let staticRaf = 0;
-  const burst = (ms: number) => {
-    // 路由把 #page-home display:none 后尺寸为 0，createImageData(0,0) 会抛
-    if (!viewport.clientWidth || !viewport.clientHeight) return;
-    staticUntil = performance.now() + ms;
-    staticCv.style.display = 'block';
-    if (staticRaf) return;
-    const c = staticCv.getContext('2d')!;
-    const draw = (now: number) => {
-      const W = Math.max(1, viewport.clientWidth >> 2);
-      const H = Math.max(1, viewport.clientHeight >> 2);
-      if (now >= staticUntil || !viewport.clientWidth) {
-        staticCv.style.display = 'none';
-        staticRaf = 0;
-        return;
-      }
-      staticCv.width = W;
-      staticCv.height = H;
-      const img = c.createImageData(W, H);
-      const d = img.data;
-      for (let i = 0; i < d.length; i += 4) {
-        const v = Math.random() * 210;
-        d[i] = v * 0.85;
-        d[i + 1] = v * 0.9;
-        d[i + 2] = v;
-        d[i + 3] = 255;
-      }
-      c.putImageData(img, 0, 0);
-      staticRaf = requestAnimationFrame(draw);
-    };
-    staticRaf = requestAnimationFrame(draw);
-  };
-
   // ---------- 正前位状态 ----------
   let front = -1;
 
@@ -236,8 +199,6 @@ export function initTheater() {
     start: 'top top',
     end: () => '+=' + Math.round(innerHeight * (N - 1) * PER),
     pin: true,
-    onLeave: () => burst(140), // 离台断讯一闪
-    onEnterBack: () => burst(140),
     onUpdate: (self) => {
       // 子页把 #page-home 藏起来后触发器区间塌缩到页顶：此时的一切
       // update 都是幻影，吸附还会反复拽子页的滚动（hero 端有同款守卫）
@@ -353,7 +314,6 @@ export function initTheater() {
     if (entered || !visible()) return;
     entered = true;
     setFront(0);
-    burst(200); // 开台一闪（作品之间的切换不再打雪花）
     gsap.to(beams, { opacity: 1, duration: 0.9, ease: 'power2.out' });
     gsap.to(pool, { opacity: 1, duration: 0.9, ease: 'power2.out' });
     const proxy = { v: entra };
