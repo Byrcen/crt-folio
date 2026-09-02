@@ -362,18 +362,24 @@ section { position: relative; overflow: hidden; }
 /* ---------- works ---------- */
 #works {
   position: relative;
-  padding: 10vh 0 0;
+  padding: 0;
 }
+/* 竖向堆叠形态（移动端 / reduced-motion）：标题块作为普通流内容排在海报之上 */
 .works-head {
   position: relative;
-  padding: 0 3.5vw;
+  padding: 10vh 3.5vw 0;
   display: flex;
   flex-direction: column;
+}
+.works-head .ch-badge {
+  position: static;
+  display: block;
+  margin-bottom: 14px;
 }
 #works-intro {
   max-width: 520px;
   color: var(--ink-mid);
-  margin-bottom: 7vh;
+  margin: 18px 0 0;
 }
 #works-title {
   display: inline-block;
@@ -385,12 +391,6 @@ section { position: relative; overflow: hidden; }
   font-size: clamp(40px, 7.4vw, 110px);
   letter-spacing: -0.01em;
   color: #f2f2f2;
-}
-#works-counter {
-  align-self: flex-end;
-  margin-top: 18px;
-  color: var(--ink-dim);
-  letter-spacing: 0.16em;
 }
 /* horizontal drag gallery: pull sideways to browse */
 #gallery-pin {
@@ -431,9 +431,11 @@ section { position: relative; overflow: hidden; }
   cursor: grab;
   overflow: hidden;
   perspective: 1800px;
-  perspective-origin: 50% 40%;
+  perspective-origin: 50% 45%;
   background:
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.012) 0 1px, transparent 1px 4px),
+    /* 顶部从内容区底色渐入舞台，章节之间没有硬边 */
+    linear-gradient(to bottom, var(--bg-dark), transparent 24vh),
     /* 海报把顶光反射到背景墙上的一团暖光 */
     radial-gradient(30% 42% at 50% 46%, rgba(255, 238, 214, 0.055), transparent 70%),
     radial-gradient(120% 95% at 50% 36%, #141414 0%, #0a0a0a 60%, #050505 100%);
@@ -446,6 +448,9 @@ section { position: relative; overflow: hidden; }
   z-index: 3;
   pointer-events: none;
   background: radial-gradient(85% 78% at 50% 44%, transparent 52%, rgba(0, 0, 0, 0.58) 100%);
+  /* 顶边不压暗：舞台从内容区底色里渐渐浮现，不能在章节交界处压出一条黑边 */
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 22vh);
+  mask-image: linear-gradient(to bottom, transparent, #000 22vh);
 }
 #gallery-pin.theater.grabbing { cursor: grabbing; }
 /* 环心：JS 每帧写 translateZ(-R) rotateY() */
@@ -455,7 +460,7 @@ section { position: relative; overflow: hidden; }
      静态位置，marginTop:-h/2 的居中会失效（海报顶部被切、底部空一大块） */
   display: block;
   left: 50%;
-  top: 45%;
+  top: 50%; /* 环心下移，给上方的标题带让出一段舞台 */
   width: 0;
   height: 0;
   padding: 0;
@@ -467,7 +472,7 @@ section { position: relative; overflow: hidden; }
 /* 广播画框：深色发丝框海报，JS 定位到环上 */
 .theater .work {
   position: absolute;
-  width: min(29vw, 48vh);
+  width: min(27vw, 42vh);
   min-width: 250px;
   margin: 0;
   padding: 0;
@@ -480,6 +485,34 @@ section { position: relative; overflow: hidden; }
   will-change: transform;
 }
 .theater .work > * { backface-visibility: hidden; }
+/* 舞台招牌：章节标 + 标题 + 一句说明排成一条带子压在舞台顶部，海报环从它下方转过
+   （说明随首次转环淡出，由 JS 驱动） */
+.theater .works-head {
+  position: absolute;
+  left: 3.5vw;
+  right: calc(3.5vw + 150px); /* 给右上角的 CH 02·0x 频道角标留位 */
+  top: clamp(90px, 10.5vh, 110px); /* 落在 HUD 导航之下、海报环之上 */
+  padding: 0;
+  z-index: 5;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 4vw;
+  align-items: end;
+  pointer-events: none;
+}
+/* 章节标由展台自己的频道角标（CH 02·0x）承担，招牌上不再重复 */
+.theater .works-head .ch-badge { display: none; }
+.theater #works-title {
+  border: 0;
+  padding: 0;
+  font-size: clamp(28px, 3.1vw, 46px);
+  line-height: 1;
+}
+.theater #works-intro {
+  max-width: 420px;
+  margin: 0 0 0.25em;
+  justify-self: end;
+}
 /* 压暗遮罩：光照强弱由 JS 驱动其透明度（.work 挂 filter 会压平 3D） */
 .th-shade {
   position: absolute;
@@ -1648,7 +1681,7 @@ html[data-zone='dark'] #freq-ruler { opacity: 1; }
   #steps li, #steps li:nth-child(n) { transform: none; margin-bottom: 3vh; }
   /* no drag on mobile — stack vertically */
   #gallery-pin { display: block; overflow: visible; padding: 0; cursor: auto; }
-  #drag-hint, #works-counter { display: none; }
+  #drag-hint { display: none; }
   #gallery {
     flex-direction: column;
     align-items: flex-start;
@@ -1664,7 +1697,7 @@ html[data-zone='dark'] #freq-ruler { opacity: 1; }
    （旧行为是静止的横向轨道被裁切，后面的海报根本看不到） */
 @media (prefers-reduced-motion: reduce) and (min-width: 768.02px) {
   #gallery-pin { display: block; overflow: visible; padding: 0; cursor: auto; }
-  #drag-hint, #works-counter { display: none; }
+  #drag-hint { display: none; }
   #gallery {
     flex-direction: column;
     align-items: center;

@@ -13,7 +13,7 @@ import { sound } from '../core/sound';
 export function initTheater() {
   const viewport = document.getElementById('gallery-pin');
   const track = document.getElementById('gallery');
-  const counter = document.getElementById('works-counter');
+  const intro = document.getElementById('works-intro');
   if (!viewport || !track) return;
 
   // 跨过断点（桌面⇄移动 / reduced-motion 切换）时两套形态无法原地互转，
@@ -182,9 +182,6 @@ export function initTheater() {
     works.forEach((w, k) => w.classList.toggle('is-front', k === i));
     const title = works[i].querySelector('.p-title-zh')?.textContent ?? '';
     live.textContent = `作品 ${i + 1} / ${N} — ${title}`;
-    if (counter) {
-      counter.textContent = `${String(i + 1).padStart(2, '0')} / ${String(N).padStart(2, '0')}`;
-    }
     dockSwap(i);
     sound.play('tick'); // 转过一台的刻度声
     if (hint?.isConnected && i !== 0) {
@@ -280,6 +277,9 @@ export function initTheater() {
       const p = posters[i];
       if (p) p.style.filter = blur > 0 ? `blur(${blur.toFixed(1)}px)` : '';
     });
+
+    // 招牌上的那句说明只在开台时读一遍：首次转环即淡出，只留章节标与标题
+    if (intro) intro.style.opacity = Math.max(0, 1 - (st.progress * (N - 1)) / 0.5).toFixed(3);
 
     if (entered) {
       // 台位跟随滚动这个单一事实来源（rotCur 掺着入场偏转和 lerp 滞后）
