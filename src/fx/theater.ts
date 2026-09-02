@@ -9,7 +9,7 @@ import { sound } from '../core/sound';
  * 上下撑开（荧光边 + 过曝回落），画面一开始撑开环就转进光下，全开后才进入转环。
  * 跨过一台放一声刻度音；停手吸附对正时光束回弹 + 旋钮声。进出展台不打雪花，
  * 静电只属于缝隙与导航的换台。
- * 舞台是实体的：相机带俯角并随鼠标视差，海报有厚度与画框，环立在一块透视地板上，
+ * 舞台是实体的：相机带俯角并随鼠标视差，海报不带画框、靠光晕立在光里，环立在一块透视地板上，
  * 光锥里飘着灰尘、光强轻微呼吸，画框各带一点随手挂上的微倾。
  * 正前作品的说明与源码链接固定显示在台下的说明档（不随环旋转）。
  * 移动端与 reduced-motion 不进展台，走 CSS 竖向堆叠。
@@ -123,6 +123,7 @@ export function initTheater() {
   const shades: HTMLElement[] = [];
   const glasses: HTMLElement[] = [];
   const mirrors: HTMLElement[] = [];
+  const halos: HTMLElement[] = [];
   works.forEach((w, idx) => {
     const glass = document.createElement('i');
     glass.className = 'th-glass';
@@ -134,13 +135,13 @@ export function initTheater() {
     back.setAttribute('aria-hidden', 'true');
     back.innerHTML = '<i></i>';
     w.appendChild(back);
-    // 厚度：四个侧面，转到侧位时露出画框的边（顶面接顶光最亮，底面沉在阴影里）
-    for (const side of ['top', 'right', 'bottom', 'left']) {
-      const f = document.createElement('i');
-      f.className = `th-edge ${side}`;
-      f.setAttribute('aria-hidden', 'true');
-      w.appendChild(f);
-    }
+    // 光晕：不用画框，正前那台被灯打出一圈带自己色温的辉光 + 上缘一线受光
+    //（垫在海报底下，亮度由 JS 按受光角驱动）
+    const halo = document.createElement('i');
+    halo.className = 'th-halo';
+    halo.setAttribute('aria-hidden', 'true');
+    w.insertBefore(halo, w.firstChild);
+    halos.push(halo);
     // 台面倒影：海报的镜像贴在画框正下方，随环一起转（挂在 .work 的 3D 空间里，
     // 竖直翻转即为平面镜像的正确几何）；亮度由 JS 按受光角驱动
     const mirror = document.createElement('i');
@@ -393,6 +394,7 @@ export function initTheater() {
       // 荧幕玻璃的镜面高光只在灯下才亮；倒影只有受光的那台才映得出来
       glasses[i].style.opacity = (0.35 + 0.65 * lit * lit).toFixed(3);
       mirrors[i].style.opacity = (0.34 * Math.pow(lit, 2.5)).toFixed(3);
+      halos[i].style.opacity = (lit * lit * light.k).toFixed(3);
       const blur = Math.round((1 - lit) * 4) * 0.6;
       const p = posters[i];
       if (p) p.style.filter = blur > 0 ? `blur(${blur.toFixed(1)}px)` : '';

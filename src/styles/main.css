@@ -632,55 +632,47 @@ section { position: relative; overflow: hidden; }
   animation: blink 1.2s steps(1) infinite;
 }
 .theater .work.is-front .th-onair { opacity: 1; }
+/* 不带画框：海报是一块被灯打亮的圆角画面 —— 极细的亮边、上沿一线受光、
+   四周微微向内压暗；存在感交给底下的光晕 */
+.theater .work,
+.th-shade,
+.th-glass,
+.th-tvback,
+.th-halo,
+.th-mirror .poster,
 .theater .work .poster {
-  /* 画框：深色宽边 + 一圈细内线，上沿接住顶光的一线亮边，下沿落进阴影 */
-  border: 7px solid #161616;
+  border-radius: 8px;
+}
+.theater .work .poster {
+  border: 1px solid rgba(255, 250, 240, 0.09);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
-    inset 0 1px 0 rgba(255, 250, 240, 0.14),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+    inset 0 0 0 1px rgba(255, 255, 255, 0.04),
+    inset 0 1px 0 rgba(255, 250, 240, 0.38),
+    inset 1px 0 0 rgba(255, 250, 240, 0.1),
+    inset -1px 0 0 rgba(0, 0, 0, 0.35),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5),
+    inset 0 0 28px rgba(0, 0, 0, 0.3);
 }
-/* 厚度：四个侧面围成 10px 深的画框盒（JS 注入；背面朝外的边自动隐藏） */
-.th-edge {
+/* 光晕（JS 注入，垫在海报底下）：内圈带每台自己的色温，外圈是灯的暖白，
+   再叠一片只在上缘的受光；透明度随受光角，侧位与背面为零 */
+.th-halo {
+  --g1: rgba(255, 246, 228, 0.26); /* 默认色温：灯的暖白 */
   position: absolute;
+  inset: 0;
+  opacity: 0;
   pointer-events: none;
+  box-shadow:
+    0 0 0 1px rgba(255, 250, 240, 0.06),
+    0 0 44px var(--g1),
+    0 0 150px rgba(255, 246, 228, 0.1),
+    0 -22px 48px -18px rgba(255, 246, 228, 0.45);
 }
-.th-edge.top {
-  left: 0;
-  right: 0;
-  bottom: 100%;
-  height: 10px;
-  transform-origin: center bottom;
-  transform: rotateX(90deg);
-  background: linear-gradient(to bottom, #4a4741, #2b2a27);
-}
-.th-edge.bottom {
-  left: 0;
-  right: 0;
-  top: 100%;
-  height: 10px;
-  transform-origin: center top;
-  transform: rotateX(-90deg);
-  background: #0b0b0b;
-}
-.th-edge.right {
-  top: 0;
-  bottom: 0;
-  left: 100%;
-  width: 10px;
-  transform-origin: left center;
-  transform: rotateY(90deg);
-  background: linear-gradient(to bottom, #292825, #121211);
-}
-.th-edge.left {
-  top: 0;
-  bottom: 0;
-  right: 100%;
-  width: 10px;
-  transform-origin: right center;
-  transform: rotateY(-90deg);
-  background: linear-gradient(to bottom, #292825, #121211);
-}
+.work:has(.p-dungeon) .th-halo { --g1: rgba(232, 162, 61, 0.3); }
+.work:has(.p-beads) .th-halo { --g1: rgba(255, 240, 214, 0.28); }
+.work:has(.p-fire) .th-halo { --g1: rgba(255, 120, 50, 0.32); }
+.work:has(.p-peaky) .th-halo { --g1: rgba(230, 214, 170, 0.26); }
+.work:has(.p-life) .th-halo { --g1: rgba(240, 210, 60, 0.3); }
+.work:has(.p-debate) .th-halo { --g1: rgba(120, 160, 255, 0.28); }
 /* 荧幕玻璃：灯位的漫射高光 + 顶光沿画面向下衰减 + 边角暗角 + 扫描线
    （JS 注入；整层透明度随受光角驱动，灯下才有镜面高光） */
 .th-glass {
@@ -716,7 +708,7 @@ section { position: relative; overflow: hidden; }
   inset: 0;
   background: #101010;
   border: 1px solid #202020;
-  transform: translateZ(-10px) rotateY(180deg); /* 贴在画框盒的背面 */
+  transform: rotateY(180deg);
   backface-visibility: hidden;
   display: grid;
   place-items: center;
