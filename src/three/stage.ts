@@ -92,7 +92,8 @@ export class Stage {
 
   // camera path (z 8.3 ≈ 电视视觉宽度 +27%，五档截图对比后定档)
   private startPos = new THREE.Vector3(0, 0.16, 8.3);
-  private endPos = new THREE.Vector3(-0.13, 0.06, 1.05);
+  // 停靠位：荧幕近乎铺满画面、机壳仍在 —— 到这里就切台，镜头不再钻进屏幕内部
+  private endPos = new THREE.Vector3(-0.13, 0.06, 1.9);
   private startLook = new THREE.Vector3(0, -0.05, 0);
   private endLook = new THREE.Vector3(-0.13, 0.06, 0.476);
 
@@ -265,6 +266,11 @@ export class Stage {
 
   setPaused(p: boolean) {
     this.paused = p;
+  }
+
+  /** 推进镜头已基本停靠（缓动余量 < 4%），缝隙切台以此为准 */
+  get docked() {
+    return this.eased > 0.96;
   }
 
   /** world point → screen px, for DOM labels anchored to 3D */

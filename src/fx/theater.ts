@@ -57,7 +57,8 @@ export function initTheater() {
     viewport.appendChild(el);
     return el;
   };
-  const beam = make('th-beam');
+  // 顶光锥：一层在环后（主体），一层在环前（穿过海报前方的薄雾），一起呼吸
+  const beams = [make('th-beam'), make('th-beam front')];
   const floor = make('th-floor');
   void floor;
   const pool = make('th-pool');
@@ -95,16 +96,32 @@ export function initTheater() {
   // ---------- 组环：荧幕玻璃 + 背板 + ON AIR 标 + 压暗遮罩，再按圆心角排上环 ----------
   const posters: (HTMLElement | null)[] = [];
   const shades: HTMLElement[] = [];
+  const glasses: HTMLElement[] = [];
+  const mirrors: HTMLElement[] = [];
   works.forEach((w, idx) => {
     const glass = document.createElement('i');
     glass.className = 'th-glass';
     glass.setAttribute('aria-hidden', 'true');
     w.querySelector('.poster')?.appendChild(glass);
+    glasses.push(glass);
     const back = document.createElement('i');
     back.className = 'th-tvback';
     back.setAttribute('aria-hidden', 'true');
     back.innerHTML = '<i></i>';
     w.appendChild(back);
+    // 台面倒影：海报的镜像贴在画框正下方，随环一起转（挂在 .work 的 3D 空间里，
+    // 竖直翻转即为平面镜像的正确几何）；亮度由 JS 按受光角驱动
+    const mirror = document.createElement('i');
+    mirror.className = 'th-mirror';
+    mirror.setAttribute('aria-hidden', 'true');
+    const ghost = w.querySelector('.poster')!.cloneNode(true) as HTMLElement;
+    ghost.removeAttribute('href');
+    ghost.removeAttribute('data-hover');
+    ghost.removeAttribute('aria-label');
+    ghost.setAttribute('tabindex', '-1');
+    mirror.appendChild(ghost);
+    w.appendChild(mirror);
+    mirrors.push(mirror);
     // 广播画框：正前位亮起的 ON AIR 状态标
     const onair = document.createElement('i');
     onair.className = 'th-onair mono-label';
@@ -295,6 +312,9 @@ export function initTheater() {
       // 光锥只照正前：遮罩随面向角压暗，背面沉入黑暗；景深虚化只作用在
       // 海报面上（blur 量化到 0.6px 台阶，避免每帧重栅格化）
       shades[i].style.opacity = (1 - Math.min(1, 0.24 + 0.82 * Math.pow(lit, 1.6))).toFixed(3);
+      // 荧幕玻璃的镜面高光只在灯下才亮；倒影只有受光的那台才映得出来
+      glasses[i].style.opacity = (0.35 + 0.65 * lit * lit).toFixed(3);
+      mirrors[i].style.opacity = (0.34 * Math.pow(lit, 2.5)).toFixed(3);
       const blur = Math.round((1 - lit) * 4) * 0.6;
       const p = posters[i];
       if (p) p.style.filter = blur > 0 ? `blur(${blur.toFixed(1)}px)` : '';
@@ -312,7 +332,7 @@ export function initTheater() {
         if (lockedAt !== front) {
           lockedAt = front;
           sound.play('switch');
-          gsap.fromTo(beam, { opacity: 0.5 }, { opacity: 1, duration: 0.6, ease: 'back.out(2.2)' });
+          gsap.fromTo(beams, { opacity: 0.5 }, { opacity: 1, duration: 0.6, ease: 'back.out(2.2)' });
           gsap.fromTo(pool, { opacity: 0.4 }, { opacity: 1, duration: 0.5, ease: 'power2.out' });
         }
       } else if (!settled) {
@@ -326,7 +346,7 @@ export function initTheater() {
   // 幻影 onEnter（此时不可见，不 kill、保持待命）；从子页经「作品/联系」
   // 返回时不会再产生 onEnter（内部状态已是 past）—— 用 onRefresh 补位，
   // goTo() 恢复显示后调用的 ScrollTrigger.refresh() 会走到这里
-  gsap.set(beam, { opacity: 0 });
+  gsap.set(beams, { opacity: 0 });
   gsap.set(pool, { opacity: 0 });
   let entryTrig: ScrollTrigger | null = null;
   const enter = () => {
@@ -334,7 +354,7 @@ export function initTheater() {
     entered = true;
     setFront(0);
     burst(200); // 开台一闪（作品之间的切换不再打雪花）
-    gsap.to(beam, { opacity: 1, duration: 0.9, ease: 'power2.out' });
+    gsap.to(beams, { opacity: 1, duration: 0.9, ease: 'power2.out' });
     gsap.to(pool, { opacity: 1, duration: 0.9, ease: 'power2.out' });
     const proxy = { v: entra };
     gsap.to(proxy, {
