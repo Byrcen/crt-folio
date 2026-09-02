@@ -852,6 +852,10 @@ section { position: relative; overflow: hidden; }
 .th-zone:hover { opacity: 1; color: var(--ink); }
 /* 提示落在刻度带与 HUD「向下滚动」之间 */
 .theater #drag-hint { z-index: 5; bottom: 5.4vh; }
+/* 矮视口里刻度带、提示、HUD 三行挤不下：提示让位（换台后它本来也会消失） */
+@media (max-height: 780px) {
+  .theater #drag-hint { display: none; }
+}
 /* 视觉隐藏但可被读屏朗读（换台播报） */
 .sr-only {
   position: absolute;

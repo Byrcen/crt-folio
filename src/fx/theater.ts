@@ -267,10 +267,12 @@ export function initTheater() {
       clearTimeout(snapT);
       if (dragging || self.progress <= 0.001 || self.progress >= 0.999) return;
       if (self.progress < introFrac) {
-        // 开机段停手：不停在半开 —— 要么关回待机，要么开到底
+        // 开机段停手：不停在半开 —— 顺着滚动方向进位：往下开到底、往上关回待机，
+        // 阈值按方向偏置（和转环段的棘轮吸附一个脾气），离场时不会被反复拽回全开
         const o = self.progress / introFrac;
+        const closeIt = self.direction < 0 ? o < 0.65 : o < 0.35;
         snapT = window.setTimeout(() => {
-          lenis.scrollTo(o < 0.35 ? st.start : rotStart(), { duration: 0.6 });
+          lenis.scrollTo(closeIt ? st.start : rotStart(), { duration: 0.6 });
         }, 240);
         return;
       }
@@ -332,7 +334,8 @@ export function initTheater() {
   };
   let lastOpen = -1;
   const reveal = (o: number, prev: number) => {
-    if (o >= 1) {
+    // 留一点亚像素容差：Lenis 的小数滚动位会让 o 停在 0.999x，不能剩一圈 0.00x% 的裁切
+    if (o >= 0.999) {
       viewport.classList.remove('booting');
       viewport.style.clipPath = '';
       viewport.style.filter = '';
@@ -359,6 +362,7 @@ export function initTheater() {
   let lastR = NaN;
   let lastParX = 0;
   let lastParY = 0;
+  let lastK = -1;
   const update = () => {
     if (!visible()) return;
     if (needLayout) layout(); // 子页期间被 resize 打坏的几何在这里自愈
@@ -374,11 +378,13 @@ export function initTheater() {
     parX += (parTX - parX) * 0.06;
     parY += (parTY - parY) * 0.06;
     const parMoved = Math.abs(parX - lastParX) > 0.0004 || Math.abs(parY - lastParY) > 0.0004;
-    if (rotCur === lastRot && R === lastR && !parMoved) return; // 静止帧无事可做
+    // 灯强在变（入场渐亮、锁定回弹）时光晕也要跟着走，哪怕环已经静止
+    if (rotCur === lastRot && R === lastR && !parMoved && light.k === lastK) return; // 静止帧无事可做
     lastRot = rotCur;
     lastR = R;
     lastParX = parX;
     lastParY = parY;
+    lastK = light.k;
     // 相机：俯角 + 视差（透视原点与整个场景一起偏，和首页电视的视差同源）
     scene.style.transform = `rotateX(${(TILT + parY * 2).toFixed(3)}deg) rotateY(${(parX * 3).toFixed(3)}deg)`;
     viewport.style.perspectiveOrigin = `${(50 + parX * 4).toFixed(2)}% ${(40 + parY * 3).toFixed(2)}%`;
