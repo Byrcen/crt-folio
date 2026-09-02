@@ -9,6 +9,8 @@ import { sound } from '../core/sound';
  * 上下撑开（荧光边 + 过曝回落），画面一开始撑开环就转进光下，全开后才进入转环。
  * 跨过一台放一声刻度音；停手吸附对正时光束回弹 + 旋钮声。进出展台不打雪花，
  * 静电只属于缝隙与导航的换台。
+ * 舞台是实体的：相机带俯角并随鼠标视差，海报有厚度与画框，环立在一块透视地板上，
+ * 光锥里飘着灰尘、光强轻微呼吸，画框各带一点随手挂上的微倾。
  * 正前作品的说明与源码链接固定显示在台下的说明档（不随环旋转）。
  * 移动端与 reduced-motion 不进展台，走 CSS 竖向堆叠。
  */
@@ -67,9 +69,25 @@ export function initTheater() {
   };
   // 顶光锥：一层在环后（主体），一层在环前（穿过海报前方的薄雾），一起呼吸
   const beams = [make('th-beam'), make('th-beam front')];
-  const floor = make('th-floor');
-  void floor;
-  const pool = make('th-pool');
+  // 场景：承载相机俯角与鼠标视差的 3D 容器，透视地板和海报环都立在里面
+  const scene = document.createElement('div');
+  scene.className = 'th-scene';
+  track.parentNode!.insertBefore(scene, track);
+  scene.appendChild(track);
+  const ground = document.createElement('div');
+  ground.className = 'th-ground';
+  ground.setAttribute('aria-hidden', 'true');
+  scene.insertBefore(ground, track);
+  // 台面光斑：画在地板上、正前位脚下（锁定时回弹增亮）
+  const pool = document.createElement('i');
+  pool.className = 'th-groundlight';
+  ground.appendChild(pool);
+  // 光锥里的灰尘
+  const dustCv = document.createElement('canvas');
+  dustCv.className = 'th-dust';
+  dustCv.setAttribute('aria-hidden', 'true');
+  viewport.appendChild(dustCv);
+  const FLOOR_GAP = 44; // 画框底边到地板线的空隙（ON AIR 标挂在这段里；.th-mirror 的 top 与之一致）
   // 开机亮线：画面上下两道边缘的荧光，随 clip 边界移动；待机时是中间一条暗线
   const phos = [make('th-phos'), make('th-phos')];
   const badge = make('th-ch mono-label');
@@ -116,6 +134,13 @@ export function initTheater() {
     back.setAttribute('aria-hidden', 'true');
     back.innerHTML = '<i></i>';
     w.appendChild(back);
+    // 厚度：四个侧面，转到侧位时露出画框的边（顶面接顶光最亮，底面沉在阴影里）
+    for (const side of ['top', 'right', 'bottom', 'left']) {
+      const f = document.createElement('i');
+      f.className = `th-edge ${side}`;
+      f.setAttribute('aria-hidden', 'true');
+      w.appendChild(f);
+    }
     // 台面倒影：海报的镜像贴在画框正下方，随环一起转（挂在 .work 的 3D 空间里，
     // 竖直翻转即为平面镜像的正确几何）；亮度由 JS 按受光角驱动
     const mirror = document.createElement('i');
@@ -160,11 +185,37 @@ export function initTheater() {
     works.forEach((w, i) => {
       w.style.marginLeft = `${-cw / 2}px`;
       w.style.marginTop = `${-ch / 2}px`;
-      w.style.transform = `rotateY(${i * STEPA}deg) translateZ(${R}px)`;
+      // 随手挂上的微倾与高低差（按序号固定，第一台端正）
+      const rz = i === 0 ? 0 : ((((i * 37) % 7) - 3) / 3) * 1.1;
+      const dy = i === 0 ? 0 : ((((i * 53) % 5) - 2) / 2) * 6;
+      w.style.transform = `rotateY(${i * STEPA}deg) translateZ(${R}px) translateY(${dy.toFixed(1)}px) rotateZ(${rz.toFixed(2)}deg)`;
     });
+    // 透视地板：以环心为中心的一大块平面，铺在画框底边下方的地板线上
+    const S = R * 4;
+    const floorY = ch / 2 + FLOOR_GAP;
+    ground.style.width = ground.style.height = `${S}px`;
+    ground.style.margin = `${-S / 2}px 0 0 ${-S / 2}px`;
+    ground.style.transform = `translate3d(0, ${floorY}px, ${-R}px) rotateX(90deg)`;
   };
   layout();
   addEventListener('resize', layout);
+
+  // ---------- 相机：俯角 + 鼠标视差 ----------
+  const TILT = -6; // 俯角：看得见环的椭圆轨迹，远处的台位略高略小
+  let parX = 0;
+  let parY = 0;
+  let parTX = 0;
+  let parTY = 0;
+  viewport.addEventListener('pointermove', (e) => {
+    if (e.pointerType !== 'mouse') return;
+    const r = viewport.getBoundingClientRect();
+    parTX = (e.clientX - r.left) / r.width - 0.5;
+    parTY = (e.clientY - r.top) / r.height - 0.5;
+  });
+  viewport.addEventListener('pointerleave', () => {
+    parTX = 0;
+    parTY = 0;
+  });
 
   // ---------- 正前位状态 ----------
   let front = -1;
@@ -305,6 +356,8 @@ export function initTheater() {
 
   let lastRot = NaN;
   let lastR = NaN;
+  let lastParX = 0;
+  let lastParY = 0;
   const update = () => {
     if (!visible()) return;
     if (needLayout) layout(); // 子页期间被 resize 打坏的几何在这里自愈
@@ -317,9 +370,17 @@ export function initTheater() {
     const rotTarget = -rot() * (N - 1) * STEPA + entra;
     rotCur += (rotTarget - rotCur) * 0.14;
     if (Math.abs(rotTarget - rotCur) < 0.01) rotCur = rotTarget;
-    if (rotCur === lastRot && R === lastR) return; // 静止帧无事可做
+    parX += (parTX - parX) * 0.06;
+    parY += (parTY - parY) * 0.06;
+    const parMoved = Math.abs(parX - lastParX) > 0.0004 || Math.abs(parY - lastParY) > 0.0004;
+    if (rotCur === lastRot && R === lastR && !parMoved) return; // 静止帧无事可做
     lastRot = rotCur;
     lastR = R;
+    lastParX = parX;
+    lastParY = parY;
+    // 相机：俯角 + 视差（透视原点与整个场景一起偏，和首页电视的视差同源）
+    scene.style.transform = `rotateX(${(TILT + parY * 2).toFixed(3)}deg) rotateY(${(parX * 3).toFixed(3)}deg)`;
+    viewport.style.perspectiveOrigin = `${(50 + parX * 4).toFixed(2)}% ${(40 + parY * 3).toFixed(2)}%`;
     track.style.transform = `translateZ(${-R}px) rotateY(${rotCur}deg)`;
 
     works.forEach((_, i) => {
@@ -352,8 +413,7 @@ export function initTheater() {
         if (lockedAt !== front) {
           lockedAt = front;
           sound.play('switch');
-          gsap.fromTo(beams, { opacity: 0.5 }, { opacity: 1, duration: 0.6, ease: 'back.out(2.2)' });
-          gsap.fromTo(pool, { opacity: 0.4 }, { opacity: 1, duration: 0.5, ease: 'power2.out' });
+          gsap.fromTo(light, { k: 0.5 }, { k: 1, duration: 0.6, ease: 'back.out(2.2)' });
         }
       } else if (!settled) {
         lockedAt = -1;
@@ -364,14 +424,15 @@ export function initTheater() {
 
   // 入场：环带着第一台从侧面转进光下。由每帧的 update 在画面开始撑开时调用
   //（跳过开机段直接落在钉住区之后的锚点跳转，也会在首帧因 o=1 立即入场）
+  // 光的强度：入场渐亮、锁定回弹都写进 light.k；呼吸与灰尘在 shimmer 里逐帧合成
+  const light = { k: 0 };
   gsap.set(beams, { opacity: 0 });
   gsap.set(pool, { opacity: 0 });
   const enter = () => {
     if (entered || !visible()) return;
     entered = true;
     setFront(0);
-    gsap.to(beams, { opacity: 1, duration: 0.9, ease: 'power2.out' });
-    gsap.to(pool, { opacity: 1, duration: 0.9, ease: 'power2.out' });
+    gsap.to(light, { k: 1, duration: 0.9, ease: 'power2.out' });
     const proxy = { v: entra };
     gsap.to(proxy, {
       v: 0,
@@ -381,6 +442,66 @@ export function initTheater() {
       onComplete: () => (entra = 0),
     });
   };
+
+  // ---------- 空气：光强呼吸 + 光锥里的灰尘（只在展台在场时逐帧画） ----------
+  const motes = Array.from({ length: 46 }, () => ({
+    u: Math.random() * 2 - 1, // 在光锥截面里的横向位置（-1..1）
+    y: Math.random(), // 竖向位置（0..1 视口高）
+    d: 0.3 + Math.random() * 0.7, // 深度：越近越大越亮、视差越强
+    vy: 0.00012 + Math.random() * 0.00025,
+    ph: Math.random() * Math.PI * 2,
+    sp: 0.5 + Math.random(),
+  }));
+  let dustLast = 0;
+  let dustClear = true;
+  const shimmer = (time: number) => {
+    const now = time * 1000;
+    if (!visible() || !inTheater() || !entered) {
+      if (!dustClear) {
+        dustCv.getContext('2d')?.clearRect(0, 0, dustCv.width, dustCv.height);
+        dustClear = true;
+      }
+      dustLast = 0;
+      return;
+    }
+    const breath = 0.93 + 0.07 * Math.sin(now * 0.0011) * Math.sin(now * 0.00043);
+    const k = light.k * breath;
+    beams.forEach((b) => (b.style.opacity = k.toFixed(3)));
+    pool.style.opacity = k.toFixed(3);
+
+    const W = viewport.clientWidth;
+    const H = viewport.clientHeight;
+    if (dustCv.width !== W || dustCv.height !== H) {
+      dustCv.width = W;
+      dustCv.height = H;
+    }
+    const c = dustCv.getContext('2d');
+    if (!c) return;
+    c.clearRect(0, 0, W, H);
+    dustClear = false;
+    const dt = dustLast ? Math.min(now - dustLast, 50) : 16;
+    dustLast = now;
+    const apexY = -0.18 * H; // 与 .th-beam 的锥顶一致
+    const tan = Math.tan((20 * Math.PI) / 180);
+    for (const m of motes) {
+      m.y += m.vy * dt * m.sp;
+      if (m.y > 1.02) {
+        m.y = -0.02;
+        m.u = Math.random() * 2 - 1;
+      }
+      const y = m.y * H;
+      const half = (y - apexY) * tan * 0.9;
+      const x = W / 2 + m.u * half + Math.sin(now * 0.0004 * m.sp + m.ph) * 6 + parX * 36 * m.d;
+      const twinkle = 0.6 + 0.4 * Math.sin(now * 0.002 * m.sp + m.ph);
+      const a = (0.1 + 0.5 * m.d) * twinkle * light.k * (1 - m.y * 0.55);
+      if (a <= 0.01) continue;
+      c.beginPath();
+      c.arc(x, y + parY * 12 * m.d, 0.6 + 1.5 * m.d, 0, Math.PI * 2);
+      c.fillStyle = `rgba(255,246,228,${a.toFixed(3)})`;
+      c.fill();
+    }
+  };
+  gsap.ticker.add(shimmer);
 
   // ---------- 输入：键盘 / 横向滚轮 / 拖拽 / 点击侧位 ----------
   // ← → 换台；↑ ↓ / PgUp PgDn 在展台内也按台步进（原生 40px 步长会被

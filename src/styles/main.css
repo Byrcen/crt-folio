@@ -431,7 +431,7 @@ section { position: relative; overflow: hidden; }
   cursor: grab;
   overflow: hidden;
   perspective: 1800px;
-  perspective-origin: 50% 45%;
+  perspective-origin: 50% 40%; /* 基线；JS 随鼠标视差微调 */
   background:
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.012) 0 1px, transparent 1px 4px),
     /* 顶部从内容区底色渐入舞台，章节之间没有硬边 */
@@ -468,6 +468,51 @@ section { position: relative; overflow: hidden; }
   z-index: 2;
   transform-style: preserve-3d;
   will-change: transform;
+}
+/* 场景：承载相机俯角与视差的 3D 容器（JS 构建），地板与环都在里面 */
+.th-scene {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  z-index: 2;
+  transform-style: preserve-3d;
+  will-change: transform;
+}
+.theater .th-scene > #gallery {
+  left: 0;
+  top: 0;
+}
+/* 透视地板：以环心为中心铺开的一块平面（尺寸/位置由 JS 按环半径设置），
+   淡格线给透视一个参照，远端与两侧用遮罩沉进雾里；底色偏透明，倒影从底下透出来 */
+.th-ground {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  background:
+    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.028) 0 1px, transparent 1px 96px),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.028) 0 1px, transparent 1px 96px),
+    rgba(7, 7, 7, 0.35);
+  -webkit-mask-image: radial-gradient(circle at 50% 75%, #000 14%, rgba(0, 0, 0, 0.5) 30%, transparent 52%);
+  mask-image: radial-gradient(circle at 50% 75%, #000 14%, rgba(0, 0, 0, 0.5) 30%, transparent 52%);
+}
+/* 台面光斑：画在地板上、正前位脚下，透视自然把它压成椭圆（JS 驱动透明度） */
+.th-groundlight {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  background: radial-gradient(circle at 50% 75%, rgba(255, 247, 230, 0.22) 0, rgba(255, 246, 228, 0.07) 7%, rgba(255, 244, 224, 0.02) 13%, transparent 20%);
+  mix-blend-mode: screen;
+}
+/* 光锥里的灰尘（canvas，JS 逐帧画） */
+.th-dust {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  mix-blend-mode: screen;
 }
 /* 广播画框：深色发丝框海报，JS 定位到环上 */
 .theater .work {
@@ -588,11 +633,53 @@ section { position: relative; overflow: hidden; }
 }
 .theater .work.is-front .th-onair { opacity: 1; }
 .theater .work .poster {
-  border-color: #262626;
-  /* 画框上沿接住顶光的一线亮边，下沿落进阴影 */
+  /* 画框：深色宽边 + 一圈细内线，上沿接住顶光的一线亮边，下沿落进阴影 */
+  border: 7px solid #161616;
   box-shadow:
-    inset 0 1px 0 rgba(255, 250, 240, 0.16),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.05),
+    inset 0 1px 0 rgba(255, 250, 240, 0.14),
     inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+}
+/* 厚度：四个侧面围成 10px 深的画框盒（JS 注入；背面朝外的边自动隐藏） */
+.th-edge {
+  position: absolute;
+  pointer-events: none;
+}
+.th-edge.top {
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 10px;
+  transform-origin: center bottom;
+  transform: rotateX(90deg);
+  background: linear-gradient(to bottom, #4a4741, #2b2a27);
+}
+.th-edge.bottom {
+  left: 0;
+  right: 0;
+  top: 100%;
+  height: 10px;
+  transform-origin: center top;
+  transform: rotateX(-90deg);
+  background: #0b0b0b;
+}
+.th-edge.right {
+  top: 0;
+  bottom: 0;
+  left: 100%;
+  width: 10px;
+  transform-origin: left center;
+  transform: rotateY(90deg);
+  background: linear-gradient(to bottom, #292825, #121211);
+}
+.th-edge.left {
+  top: 0;
+  bottom: 0;
+  right: 100%;
+  width: 10px;
+  transform-origin: right center;
+  transform: rotateY(-90deg);
+  background: linear-gradient(to bottom, #292825, #121211);
 }
 /* 荧幕玻璃：灯位的漫射高光 + 顶光沿画面向下衰减 + 边角暗角 + 扫描线
    （JS 注入；整层透明度随受光角驱动，灯下才有镜面高光） */
@@ -611,7 +698,7 @@ section { position: relative; overflow: hidden; }
 .th-mirror {
   position: absolute;
   left: 0;
-  top: calc(100% + 10px);
+  top: calc(100% + 44px); /* 从地板线起（= theater.ts 的 FLOOR_GAP） */
   width: 100%;
   opacity: 0;
   transform: scaleY(-1);
@@ -629,7 +716,7 @@ section { position: relative; overflow: hidden; }
   inset: 0;
   background: #101010;
   border: 1px solid #202020;
-  transform: rotateY(180deg);
+  transform: translateZ(-10px) rotateY(180deg); /* 贴在画框盒的背面 */
   backface-visibility: hidden;
   display: grid;
   place-items: center;
@@ -717,34 +804,6 @@ section { position: relative; overflow: hidden; }
   filter: blur(14px);
 }
 .th-beam.front::after { opacity: 0.18; }
-/* 舞台地面：台沿一道柔光而非硬线，台面在正前脚下受光，向近处沉入黑暗 */
-.th-floor {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 26vh;
-  z-index: 1;
-  pointer-events: none;
-  background:
-    radial-gradient(58% 120% at 50% 0%, rgba(255, 246, 228, 0.07), rgba(255, 246, 228, 0.02) 46%, transparent 72%),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.014) 10%, transparent 38%),
-    linear-gradient(to bottom, transparent 40%, rgba(0, 0, 0, 0.38) 100%);
-}
-/* 台面光斑：热芯 + 长尾衰减，落在正前位脚下 */
-.th-pool {
-  position: absolute;
-  left: 50%;
-  bottom: 15vh;
-  width: 42vw;
-  height: 10vh;
-  transform: translateX(-50%);
-  z-index: 1;
-  pointer-events: none;
-  background: radial-gradient(50% 50% at 50% 50%, rgba(255, 247, 230, 0.24) 0%, rgba(255, 246, 228, 0.11) 30%, rgba(255, 244, 224, 0.035) 62%, transparent 100%);
-  filter: blur(8px);
-  mix-blend-mode: screen;
-}
 /* 频道角标：跳台闪现（下移避开 HUD 声音开关） */
 .th-ch {
   position: absolute;
