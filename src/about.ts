@@ -42,10 +42,11 @@ export function initAboutPage() {
 
   ScrollTrigger.create({
     trigger: '#feat',
-    start: 'top 70%',
+    // 板子一露头就开始画、走到八成就画完：左板不再空着灰一大段才出现内容
+    start: 'top bottom',
     end: 'bottom bottom',
     onUpdate: (self) => {
-      const p = self.progress;
+      const p = Math.min(1, self.progress / 0.8);
       drawOrder.forEach(([el, a, b]) => seg(el, p, a, b));
       dot.style.opacity = p > 0.96 ? '1' : '0';
     },

@@ -165,9 +165,11 @@ body.no-native-cursor, body.no-native-cursor * { cursor: none !important; }
   transition: color 0.65s ease-in-out;
 }
 #switch-label svg {
+  /* 标签挂在电视右侧、旋钮下方：箭头从标签左上角指向旋钮 */
   position: absolute;
-  left: 55%;
-  bottom: calc(100% + 4px);
+  right: 55%;
+  bottom: calc(100% - 2px);
+  transform: scaleY(-1);
 }
 #switch-label .mono-label { white-space: nowrap; }
 
@@ -175,7 +177,7 @@ body.no-native-cursor, body.no-native-cursor * { cursor: none !important; }
 #hero-headline {
   position: absolute;
   left: 50%;
-  top: 14vh;
+  top: 10vh; /* 上提：第二行不再被天线顶到 */
   transform: translateX(-50%);
   width: max-content;
   max-width: 92vw;
@@ -193,7 +195,7 @@ body.no-native-cursor, body.no-native-cursor * { cursor: none !important; }
 #hero-headline .hh-title {
   font-family: var(--font-d);
   font-weight: 500;
-  font-size: clamp(28px, 4.4vw, 58px);
+  font-size: clamp(28px, 4.2vw, 54px);
   line-height: 1.14;
   letter-spacing: -0.01em;
 }
@@ -345,7 +347,7 @@ section { position: relative; overflow: hidden; }
 }
 #steps {
   position: absolute;
-  top: 14vh;
+  top: 21vh; /* 落在标题第二行旁，不再贴着第一行顶边像上标 */
   right: 4vw;
   list-style: none;
   text-align: left;
@@ -358,9 +360,10 @@ section { position: relative; overflow: hidden; }
   margin-bottom: 9vh;
   opacity: 0;
 }
-#steps li:nth-child(1) { transform: translateX(-27vw); }
-#steps li:nth-child(2) { transform: translateX(-18vw); }
-#steps li:nth-child(3) { transform: translateX(-9vw); }
+/* 阶梯从标题第一行的右端之外开始，既不像上标也不压到句号 */
+#steps li:nth-child(1) { transform: translateX(-19vw); }
+#steps li:nth-child(2) { transform: translateX(-13vw); }
+#steps li:nth-child(3) { transform: translateX(-6.5vw); }
 #steps li span { color: var(--ink-mid); margin-right: 6px; }
 #about-para {
   position: relative;
@@ -1497,7 +1500,7 @@ section { position: relative; overflow: hidden; }
   top: 0;
   width: 50%;
   height: 100vh;
-  background: radial-gradient(85% 70% at 50% 46%, #a8a8a8 0%, #6f6f6f 55%, #161616 100%);
+  background: radial-gradient(85% 70% at 50% 46%, #cfcbc3 0%, #8e8a83 55%, #161616 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1534,10 +1537,10 @@ section { position: relative; overflow: hidden; }
 #feat-right {
   width: 50%;
   background: #0a0a0a;
-  padding: 10vh 5vw;
+  padding: 8vh 5vw 12vh;
 }
 .feat-item {
-  min-height: 78vh;
+  min-height: 62vh;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -1586,7 +1589,7 @@ section { position: relative; overflow: hidden; }
   top: 0;
   left: 0;
   right: 0;
-  height: 15vh;
+  height: max(15vh, 120px);
   z-index: 4;
   pointer-events: none;
   background: linear-gradient(to bottom, rgba(10, 10, 10, 0.98) 32%, rgba(10, 10, 10, 0));

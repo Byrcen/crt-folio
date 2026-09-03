@@ -206,17 +206,24 @@ export class ScreenFX {
     c.stroke();
 
     // headline typewriter, char-wrapped (CJK-safe), with highlighted substring
-    c.font = '600 32px "JetBrains Mono", "Noto Sans SC", monospace';
+    c.font = '600 30px "JetBrains Mono", "Noto Sans SC", monospace';
     c.textBaseline = 'top';
     const hi = COPY.screen.highlight;
     const hiStart = hi ? this.text.indexOf(hi) : -1;
+    // 高亮词和"— 尾词"是不可拆的整体：放不下就整体换行，不再出现"— 调 / 研"
+    const stem = COPY.screen.stem;
+    const tailStart = Math.max(0, stem.lastIndexOf('—'));
+    const longest = COPY.screen.words.reduce((a, b) => (b.length > a.length ? b : a), '');
+    const tailW = c.measureText(stem.slice(tailStart) + longest).width;
+    const hiW = hi ? c.measureText(hi).width : 0;
     let x = 34;
     let y = 40;
     const maxW = W - 60;
     for (let i = 0; i < this.text.length; i++) {
       const ch = this.text[i];
       const chW = c.measureText(ch).width;
-      if (x + chW > maxW) {
+      const atomW = i === hiStart ? hiW : i === tailStart && i >= stem.length - 3 ? tailW : chW;
+      if (x + atomW > maxW && x > 34) {
         x = 34;
         y += 44;
       }

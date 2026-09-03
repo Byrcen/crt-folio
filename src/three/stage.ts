@@ -319,9 +319,9 @@ export class Stage {
     gsap.to(this.dust.material as THREE.PointsMaterial, { opacity: T.dust, duration: dur, delay: 0.15, ease: 'power2.inOut', overwrite: 'auto' });
   }
 
-  /** anchor point for the "Switch Day 'N' Night" label (below the shelf, under the TV) */
+  /** "切换 日 / 夜"标签的锚点：电视右侧、旋钮下方（原来在台面倒影区里，箭头指空） */
   get labelAnchor() {
-    return new THREE.Vector3(-0.28, -0.78, 0.76);
+    return new THREE.Vector3(0.78, -0.4, 0.5); // 再抬一点，避开台面上的遥控器
   }
 
   get knobWorld() {
