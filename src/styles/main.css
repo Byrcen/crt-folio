@@ -311,6 +311,8 @@ body.no-native-cursor, body.no-native-cursor * { cursor: none !important; }
 html[data-foot] #hud-comment,
 html[data-foot] #hud-scroll,
 html[data-foot] #hud-clock { opacity: 0; }
+/* 展厅钉住期间滚动的语义是换台，"向下滚动"先让开 */
+html[data-theater] #hud-scroll { opacity: 0; }
 .reg-dot {
   position: absolute;
   top: 10px;
@@ -336,9 +338,9 @@ section { position: relative; overflow: hidden; }
 #about {
   min-height: 100vh;
   min-height: 100dvh;
-  padding: 16vh 3.5vw 12vh;
+  padding: 16vh 3.5vw 6vh; /* 底部留白减半：与展厅待机黑场连起来不再是一屏多的黑带 */
   background:
-    linear-gradient(to bottom, rgba(10, 10, 10, 0) 60%, #0a0a0a 100%),
+    linear-gradient(to bottom, rgba(10, 10, 10, 0) 75%, #0a0a0a 100%),
     repeating-linear-gradient(0deg, #161616 0 1px, transparent 1px 26px),
     repeating-linear-gradient(90deg, #161616 0 1px, transparent 1px 26px),
     #0d0d0d;
@@ -464,8 +466,6 @@ section { position: relative; overflow: hidden; }
   padding: 0;
   cursor: grab;
   overflow: hidden;
-  perspective: 1800px;
-  perspective-origin: 50% 40%; /* 基线；JS 随鼠标视差微调 */
   background:
     repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.012) 0 1px, transparent 1px 4px),
     /* 顶部从内容区底色渐入舞台，章节之间没有硬边 */
@@ -502,6 +502,14 @@ section { position: relative; overflow: hidden; }
   z-index: 2;
   transform-style: preserve-3d;
   will-change: transform;
+}
+/* 画面层：透视、开机裁切、过曝都在这一层（JS 构建）；招牌 / 索引条 / 说明档在它之外 */
+.th-view {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  perspective: 1800px;
+  perspective-origin: 50% 40%; /* 基线；JS 随鼠标视差微调 */
 }
 /* 场景：承载相机俯角与视差的 3D 容器（JS 构建），地板与环都在里面 */
 .th-scene {
@@ -569,7 +577,7 @@ section { position: relative; overflow: hidden; }
 .theater .works-head {
   position: absolute;
   left: 3.5vw;
-  right: calc(3.5vw + 150px); /* 给右上角的 CH 02·0x 频道角标留位 */
+  right: 3.5vw;
   top: clamp(90px, 10.5vh, 110px); /* 落在 HUD 导航之下、海报环之上 */
   padding: 0;
   z-index: 5;
@@ -830,41 +838,38 @@ section { position: relative; overflow: hidden; }
   filter: blur(14px);
 }
 .th-beam.front::after { opacity: 0.18; }
-/* 频道角标：跳台闪现（下移避开 HUD 声音开关） */
-.th-ch {
-  position: absolute;
-  top: clamp(58px, 9vh, 110px);
-  right: 3.5vw;
-  z-index: 5;
-  color: var(--ink-mid);
-  letter-spacing: 0.22em;
-}
-.th-ch.flick { animation: th-flick 0.4s steps(3) both; }
-@keyframes th-flick {
-  0% { opacity: 0; }
-  60% { opacity: 0.3; }
-  100% { opacity: 1; }
-}
-/* 频段刻度：当前台点亮 */
-.th-ticks {
+/* 索引条：CH 02 · 01…06，当前台点亮并跳台闪现（取代右上角台号与刻度带） */
+.th-index {
   position: absolute;
   left: 50%;
   bottom: 8vh;
   transform: translateX(-50%);
   display: flex;
-  gap: 10px;
+  align-items: center;
+  gap: 14px;
   z-index: 5;
+  color: var(--ink-dim);
+  letter-spacing: 0.18em;
   pointer-events: none;
 }
-.th-ticks i {
-  width: 14px;
-  height: 2px;
-  background: #2c2c2c;
-  transition: background 0.25s ease;
+.th-index b {
+  font-weight: 400;
+  margin-right: 6px;
+  opacity: 0.7;
 }
-.th-ticks i.hot {
-  background: var(--teal);
-  box-shadow: 0 0 8px rgba(63, 216, 192, 0.7);
+.th-index i {
+  font-style: normal;
+  transition: color 0.25s ease, text-shadow 0.25s ease;
+}
+.th-index i.hot {
+  color: var(--teal);
+  text-shadow: 0 0 8px rgba(63, 216, 192, 0.6);
+}
+.th-index i.flick { animation: th-flick 0.4s steps(3) both; }
+@keyframes th-flick {
+  0% { opacity: 0; }
+  60% { opacity: 0.3; }
+  100% { opacity: 1; }
 }
 /* 两侧换台区 */
 .th-zone {
@@ -1693,7 +1698,7 @@ body.cursor-hidden #cursor { opacity: 0; }
   opacity: 0;
   z-index: 2;
 }
-#footer .ch-badge { top: clamp(64px, 8vh, 96px); }
+#footer .ch-badge { top: 2vh; } /* 页脚滚不到视口顶，不会与导航相撞 */
 #page-about .ch-badge { top: 12vh; } /* 子页无滚动语境，避开 HUD 导航 */
 .ch-badge.on { animation: ch-flick 0.5s steps(2) both; }
 @keyframes ch-flick {

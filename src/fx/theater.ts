@@ -15,7 +15,7 @@ import { sound } from '../core/sound';
  * 移动端与 reduced-motion 不进展台，走 CSS 竖向堆叠。
  */
 /** 开机段占的滚动量（视口高的倍数）：导航直达作品区时要跳过它，落在画面全开处 */
-export const THEATER_INTRO = 0.5;
+export const THEATER_INTRO = 0.25;
 
 export function initTheater() {
   const viewport = document.getElementById('gallery-pin');
@@ -57,22 +57,26 @@ export function initTheater() {
   const N = works.length;
   const STEPA = 360 / N; // 相邻两台的圆心角
   const PER = 0.6; // 每转一台占 0.6 个视口高的滚动量
-  const INTRO = THEATER_INTRO; // 开机段：钉住后先用半个视口高的滚动把画面撑开
+  const INTRO = THEATER_INTRO; // 开机段：钉住后先用 1/4 个视口高的滚动把画面撑开
   const introFrac = INTRO / ((N - 1) * PER + INTRO); // 开机段占钉住区间的比例
 
   // ---------- 舞台道具（仅桌面端存在，故由 JS 构建而非写进 HTML） ----------
-  const make = (cls: string) => {
+  const makeIn = (parent: HTMLElement, cls: string) => {
     const el = document.createElement('div');
     el.className = cls;
-    viewport.appendChild(el);
+    parent.appendChild(el);
     return el;
   };
+  const make = (cls: string) => makeIn(viewport, cls);
+  // 画面层：开机裁切与过曝只打在这一层（它不是 preserve-3d 容器，clip / filter 不会
+  // 把环压平）；招牌、索引条、说明档留在外面，待机的黑场上仍有身份
+  const view = makeIn(viewport, 'th-view');
   // 顶光锥：一层在环后（主体），一层在环前（穿过海报前方的薄雾），一起呼吸
-  const beams = [make('th-beam'), make('th-beam front')];
+  const beams = [makeIn(view, 'th-beam'), makeIn(view, 'th-beam front')];
   // 场景：承载相机俯角与鼠标视差的 3D 容器，透视地板和海报环都立在里面
   const scene = document.createElement('div');
   scene.className = 'th-scene';
-  track.parentNode!.insertBefore(scene, track);
+  view.appendChild(scene);
   scene.appendChild(track);
   const ground = document.createElement('div');
   ground.className = 'th-ground';
@@ -86,15 +90,21 @@ export function initTheater() {
   const dustCv = document.createElement('canvas');
   dustCv.className = 'th-dust';
   dustCv.setAttribute('aria-hidden', 'true');
-  viewport.appendChild(dustCv);
+  view.appendChild(dustCv);
   const FLOOR_GAP = 44; // 画框底边到地板线的空隙（ON AIR 标挂在这段里；.th-mirror 的 top 与之一致）
   // 开机亮线：画面上下两道边缘的荧光，随 clip 边界移动；待机时是中间一条暗线
-  const phos = [make('th-phos'), make('th-phos')];
-  const badge = make('th-ch mono-label');
-  badge.setAttribute('aria-hidden', 'true');
-  const ticks = make('th-ticks');
-  ticks.setAttribute('aria-hidden', 'true');
-  for (let i = 0; i < N; i++) ticks.appendChild(document.createElement('i'));
+  const phos = [makeIn(view, 'th-phos'), makeIn(view, 'th-phos')];
+  // 索引条：章节号 + 01…06，当前台点亮 —— 取代右上角台号角标与刻度带两处重复
+  const index = make('th-index mono-label');
+  index.setAttribute('aria-hidden', 'true');
+  const indexLead = document.createElement('b');
+  indexLead.textContent = 'CH 02';
+  index.appendChild(indexLead);
+  for (let i = 0; i < N; i++) {
+    const t = document.createElement('i');
+    t.textContent = String(i + 1).padStart(2, '0');
+    index.appendChild(t);
+  }
   // 台下说明档：正前作品的说明 + 源码链接（克隆自 .work，不随环转）
   const dock = make('th-dock');
   // 屏幕阅读器的换台播报
@@ -159,7 +169,7 @@ export function initTheater() {
     const onair = document.createElement('i');
     onair.className = 'th-onair mono-label';
     onair.setAttribute('aria-hidden', 'true');
-    onair.textContent = `CH 02·${String(idx + 1).padStart(2, '0')} · ON AIR`;
+    onair.textContent = 'ON AIR'; // 台号由索引条承担，画框下只留状态
     w.appendChild(onair);
     // 亮度用遮罩层压暗 —— .work 上不能挂 filter：filter 会把 preserve-3d
     // 压平，电视背板就永远渲染不出来（背面会露出镜像海报）
@@ -235,11 +245,14 @@ export function initTheater() {
     if (i === front) return;
     front = i;
     if (i === pendingSlot) pendingSlot = -1; // 到位，交还控制权
-    badge.textContent = `CH 02·${String(i + 1).padStart(2, '0')}`;
-    badge.classList.remove('flick');
-    void badge.offsetWidth; // 重启闪现动画
-    badge.classList.add('flick');
-    (Array.from(ticks.children) as HTMLElement[]).forEach((t, k) => t.classList.toggle('hot', k === i));
+    (Array.from(index.querySelectorAll('i')) as HTMLElement[]).forEach((t, k) => {
+      t.classList.toggle('hot', k === i);
+      t.classList.remove('flick');
+      if (k === i) {
+        void t.offsetWidth; // 重启跳台闪现
+        t.classList.add('flick');
+      }
+    });
     works.forEach((w, k) => w.classList.toggle('is-front', k === i));
     const title = works[i].querySelector('.p-title-zh')?.textContent ?? '';
     live.textContent = `作品 ${i + 1} / ${N} — ${title}`;
@@ -257,6 +270,8 @@ export function initTheater() {
     start: 'top top',
     end: () => '+=' + Math.round(innerHeight * ((N - 1) * PER + INTRO)),
     pin: true,
+    // 钉住期间滚动的语义是换台，HUD 底部的"向下滚动"先让开
+    onToggle: (self) => document.documentElement.toggleAttribute('data-theater', self.isActive),
     onUpdate: (self) => {
       // 子页把 #page-home 藏起来后触发器区间塌缩到页顶：此时的一切
       // update 都是幻影，吸附还会反复拽子页的滚动（hero 端有同款守卫）
@@ -270,7 +285,7 @@ export function initTheater() {
         // 开机段停手：不停在半开 —— 顺着滚动方向进位：往下开到底、往上关回待机，
         // 阈值按方向偏置（和转环段的棘轮吸附一个脾气），离场时不会被反复拽回全开
         const o = self.progress / introFrac;
-        const closeIt = self.direction < 0 ? o < 0.65 : o < 0.35;
+        const closeIt = self.direction < 0 ? o < 0.65 : o < 0.15; // 往下默认往开吸
         snapT = window.setTimeout(() => {
           lenis.scrollTo(closeIt ? st.start : rotStart(), { duration: 0.6 });
         }, 240);
@@ -333,24 +348,28 @@ export function initTheater() {
     return t * t * (3 - 2 * t);
   };
   let lastOpen = -1;
+  let booted = false; // 开机音每次在场只响一次，来回犹豫不重复
   const reveal = (o: number, prev: number) => {
     // 留一点亚像素容差：Lenis 的小数滚动位会让 o 停在 0.999x，不能剩一圈 0.00x% 的裁切
     if (o >= 0.999) {
       viewport.classList.remove('booting');
-      viewport.style.clipPath = '';
-      viewport.style.filter = '';
+      view.style.clipPath = '';
+      view.style.filter = '';
       phos.forEach((p) => (p.style.opacity = '0'));
       return;
     }
-    if (o > 0.02 && prev <= 0.02) sound.play('poweron'); // 只在从待机拧开时响
+    if (o > 0.02 && prev <= 0.02 && !booted) {
+      booted = true;
+      sound.play('poweron');
+    }
     viewport.classList.add('booting');
     const tall = ss(0, 1, o);
     const v = 50 * (1 - tall);
     const edge = tall > 0.001 ? `${v.toFixed(3)}%` : 'calc(50% - 1px)';
-    viewport.style.clipPath = `inset(${edge} 0)`;
+    view.style.clipPath = `inset(${edge} 0)`;
     // 过曝：刚撑开时画面发白，逐渐回落
     const bloom = 1 + 0.9 * ss(0.02, 0.15, o) * (1 - ss(0.15, 0.9, o));
-    viewport.style.filter = bloom > 1.01 ? `brightness(${bloom.toFixed(3)})` : '';
+    view.style.filter = bloom > 1.01 ? `brightness(${bloom.toFixed(3)})` : '';
     phos[0].style.top = edge;
     phos[1].style.bottom = edge;
     // 待机时那条线就带着画面的一丝色彩（真 CRT 收成一条线时也这样），别太暗以免像断线
@@ -388,7 +407,7 @@ export function initTheater() {
     lastK = light.k;
     // 相机：俯角 + 视差（透视原点与整个场景一起偏，和首页电视的视差同源）
     scene.style.transform = `rotateX(${(TILT + parY * 2).toFixed(3)}deg) rotateY(${(parX * 3).toFixed(3)}deg)`;
-    viewport.style.perspectiveOrigin = `${(50 + parX * 4).toFixed(2)}% ${(40 + parY * 3).toFixed(2)}%`;
+    view.style.perspectiveOrigin = `${(50 + parX * 4).toFixed(2)}% ${(40 + parY * 3).toFixed(2)}%`;
     track.style.transform = `translateZ(${-R}px) rotateY(${rotCur}deg)`;
 
     works.forEach((_, i) => {
@@ -466,6 +485,7 @@ export function initTheater() {
   const shimmer = (time: number) => {
     const now = time * 1000;
     if (!visible() || !inTheater() || !entered) {
+      booted = false; // 离场后再进来才允许再响一次开机音
       if (!dustClear) {
         dustCv.getContext('2d')?.clearRect(0, 0, dustCv.width, dustCv.height);
         dustClear = true;
