@@ -144,6 +144,9 @@ function goTo(page: Page, anchor?: string, fromPop = false) {
     }
     const dark = page === 'about' || !!anchor;
     document.documentElement.dataset.zone = dark ? 'dark' : 'hero';
+    if (page === 'about') {
+      document.querySelectorAll<HTMLElement>('#hud-nav a').forEach((a) => a.classList.toggle('is-current', a.getAttribute('href') === '#about'));
+    }
     stage?.setPaused(dark);
     // 离开首页时清掉页脚态，否则底部 HUD 在子页上整排隐形
     if (page === 'about') document.documentElement.removeAttribute('data-foot');
@@ -187,6 +190,11 @@ function initNav() {
 // ---------- scroll choreography (home) ----------
 function initScrollFx() {
   const heroHeadline = document.getElementById('hero-headline')!;
+
+  // 展厅的钉住必须先于其他一切触发器建立：ScrollTrigger 按创建顺序量位置，
+  // 先建的触发器量不到后建的钉住撑开的那几屏，导航章节高亮、页脚让位、
+  // 宣言打字机与回声都会提前整整一个展厅
+  initTheater();
 
   // ---------- 缝隙切台 ----------
   // 镜头推进到底就是一次换台：镜头停靠（p=1 且相机到位）→ NO SIGNAL 盖住
@@ -291,6 +299,24 @@ function initScrollFx() {
     else arm(lo);
   });
 
+  // 导航当前章节：所在章节的圆点点亮（子页由 goTo 直接点亮"关于我"）
+  const navFor = (href: string) => document.querySelector<HTMLElement>(`#hud-nav a[href="${href}"]`);
+  const setCurrent = (href: string | null) => {
+    document.querySelectorAll<HTMLElement>('#hud-nav a').forEach((a) => a.classList.toggle('is-current', a.getAttribute('href') === href));
+  };
+  for (const href of ['#about', '#works', '#footer']) {
+    if (!navFor(href)) continue;
+    ScrollTrigger.create({
+      trigger: href,
+      start: 'top 60%',
+      end: 'bottom 40%', // 页脚比 60% 视口矮，end 不能用 bottom 60%（会跑到 start 前面，永不激活）
+      onToggle: (self) => {
+        if (self.isActive) setCurrent(href);
+        else if (navFor(href)?.classList.contains('is-current')) setCurrent(null);
+      },
+    });
+  }
+
   // HUD goes light over dark content; stage pauses when covered
   ScrollTrigger.create({
     trigger: '#content',
@@ -304,11 +330,6 @@ function initScrollFx() {
     onEnter: () => stage?.setPaused(true),
     onLeaveBack: () => stage?.setPaused(false),
   });
-
-  // 展厅的 3.5 屏钉住必须先于它下方的一切触发器建立：ScrollTrigger 按创建顺序
-  // 量位置，先建的触发器量不到后建的钉住撑开的那 3150px，页脚让位、宣言打字机、
-  // 宣言回声都会提前整整一个展厅（M0）
-  initTheater();
 
   // bottom HUD (comment / scroll hint / clock) clears out over the footer
   ScrollTrigger.create({

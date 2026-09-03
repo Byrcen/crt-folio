@@ -21,7 +21,7 @@
   --bg-dark: #0a0a0a;
   --ink: #ededed;
   --ink-mid: #8a8a8a;
-  --ink-dim: #6a6a6a; /* ≥3:1 on the near-black bg for info-bearing labels */
+  --ink-dim: #777777; /* ≈4.6:1 on the near-black bg：信息文字过 AA */
   --hairline: #2a2a2a;
   --teal: #3fd8c0;
   /* 中文走系统字体栈：PingFang / 雅黑 / Noto CJK，不再拉 Noto Sans SC */
@@ -247,7 +247,13 @@ body.no-native-cursor, body.no-native-cursor * { cursor: none !important; }
   margin-right: 9px;
   border-radius: 50%;
   background: currentColor;
-  opacity: 0.85;
+  opacity: 0.45;
+  transition: opacity 0.3s ease, box-shadow 0.3s ease;
+}
+/* 当前章节：圆点点亮 */
+#hud-nav a.is-current::before {
+  opacity: 1;
+  box-shadow: 0 0 6px currentColor;
 }
 #hud-logo {
   position: absolute;
@@ -1606,7 +1612,8 @@ html[data-zone='dark'] #top-fade { opacity: 1; }
 
 /* ---------- reduced motion: still the ambient loops the JS doesn't gate ---------- */
 @media (prefers-reduced-motion: reduce) {
-  #grain { animation: none; }
+  #grain, html[data-zone='hero'] #grain { animation: none; }
+  #cursor { transition: none; }
   #drag-hint { animation: none; }
   #big-circle .orbit { animation: none; }
   #hud-scroll b,

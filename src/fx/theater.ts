@@ -420,6 +420,7 @@ export function initTheater() {
       // 荧幕玻璃的镜面高光只在灯下才亮；倒影只有受光的那台才映得出来
       glasses[i].style.opacity = (0.35 + 0.65 * lit * lit).toFixed(3);
       mirrors[i].style.opacity = (0.34 * Math.pow(lit, 2.5)).toFixed(3);
+      mirrors[i].style.visibility = Math.abs(ang) > 45 ? 'hidden' : ''; // 侧位与背面的倒影本就看不见，不合成
       halos[i].style.opacity = (lit * lit * light.k).toFixed(3);
       const blur = Math.round((1 - lit) * 4) * 0.6;
       const p = posters[i];

@@ -29,8 +29,8 @@ class SoundFX {
         this.noise(t, 0.09, 0.06, 1900);
         this.blip(t, 1300, 0.04, 0.035, 'square');
         break;
-      case 'tick': // hover: tiny high blip
-        this.blip(t, 1700, 0.03, 0.035, 'square');
+      case 'tick': // hover: 极轻的一声，正弦而非方波，不刺
+        this.blip(t, 1200, 0.018, 0.02, 'sine');
         break;
       case 'click': // generic click
         this.blip(t, 950, 0.05, 0.05, 'square');
@@ -100,8 +100,17 @@ export const sound = new SoundFX();
 
 /** Hover ticks for [data-hover] — delegated so late-built elements work too. */
 export function bindHoverSounds() {
+  // 只在真实的鼠标移动 150ms 内响，且 120ms 内不重复：
+  // 环转过来"扫"到光标、或元素在光标下滑过时不该噼里啪啦
+  let lastMove = 0;
+  let lastTick = 0;
+  addEventListener('pointermove', () => (lastMove = performance.now()), { passive: true });
   document.addEventListener('pointerover', (e) => {
     const t = (e.target as Element).closest?.('[data-hover]');
-    if (t && !t.contains(e.relatedTarget as Node)) sound.play('tick');
+    if (!t || t.contains(e.relatedTarget as Node)) return;
+    const now = performance.now();
+    if (now - lastMove > 150 || now - lastTick < 120) return;
+    lastTick = now;
+    sound.play('tick');
   });
 }

@@ -87,6 +87,8 @@ export class Stage {
   private progress = 0; // raw scroll progress
   private eased = 0; // lerped camera progress
   private lastT = 0; // 上一帧时间戳：缓动按真实 dt，不同刷新率手感一致
+  private lastPointerT = 0; // 最近一次鼠标移动，闲置判定用
+  private themeUntil = 0; // 日夜材质过渡结束时刻，过渡中不降帧
   private paused = false;
   private onKnob?: () => void;
   private onScreen?: () => void;
@@ -99,9 +101,11 @@ export class Stage {
   private endLook = new THREE.Vector3(-0.13, 0.06, 0.476);
 
   constructor(container: HTMLElement) {
-    this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    this.renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'default' });
     this.renderer.setSize(innerWidth, innerHeight);
-    this.renderer.setPixelRatio(Math.min(devicePixelRatio, innerWidth < 768 ? 1.5 : 2));
+    this.renderer.setPixelRatio(this.dpr());
+    this.renderer.domElement.setAttribute('role', 'img');
+    this.renderer.domElement.setAttribute('aria-label', '一台复古电视立在桌上，屏幕上打着字');
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(this.renderer.domElement);
@@ -222,6 +226,7 @@ export class Stage {
     addEventListener('pointermove', (e) => {
       this.pointerNdc.set((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
       this.mouse.x = (e.clientX / innerWidth) * 2 - 1;
+      this.lastPointerT = performance.now();
       this.mouse.y = (e.clientY / innerHeight) * 2 - 1;
     });
     addEventListener('click', (e) => {
@@ -298,6 +303,7 @@ export class Stage {
     }
     const T = THEMES[t];
     const dur = animate ? 0.55 : 0;
+    this.themeUntil = performance.now() + dur * 1000 + 300;
     const lerpColor = (mat: THREE.MeshStandardMaterial, hex: number, d: number, delay: number) => {
       const target = new THREE.Color(hex);
       gsap.to(mat.color, { r: target.r, g: target.g, b: target.b, duration: d, delay, ease: 'power2.inOut', overwrite: 'auto' });
@@ -348,9 +354,17 @@ export class Stage {
     this.camera.aspect = innerWidth / innerHeight;
     this.camera.updateProjectionMatrix();
     // 跨显示器拖窗后 devicePixelRatio 会变：不跟就永远糊着（或过采样）
-    const dpr = Math.min(devicePixelRatio, innerWidth < 768 ? 1.5 : 2);
+    const dpr = this.dpr();
     if (dpr !== this.renderer.getPixelRatio()) this.renderer.setPixelRatio(dpr);
     this.renderer.setSize(innerWidth, innerHeight);
+  }
+
+  /** 像素比分档：桌面上限 1.5，低配 1.25，手机 1 —— 首屏停留期间不为闲置帧多付一倍像素 */
+  private dpr() {
+    if (innerWidth < 768) return Math.min(devicePixelRatio, 1);
+    const nav = navigator as Navigator & { deviceMemory?: number };
+    const low = (navigator.hardwareConcurrency ?? 8) <= 4 || (nav.deviceMemory ?? 8) <= 4;
+    return Math.min(devicePixelRatio, low ? 1.25 : 1.5);
   }
 
   private tick(t: number) {
@@ -358,7 +372,12 @@ export class Stage {
       this.lastT = 0;
       return;
     }
-    const dt = this.lastT ? Math.min(t - this.lastT, 50) : 16.7;
+    const dtRaw = this.lastT ? Math.min(t - this.lastT, 50) : 16.7;
+    // 闲置（镜头到位、鼠标静止、没在换日夜）时降到约 30fps：屏幕纹理本来就是 30fps 刷新
+    const shapedNow = Math.pow(this.progress, 1.9);
+    const idle = Math.abs(shapedNow - this.eased) < 0.0005 && t - this.lastPointerT > 250 && t > this.themeUntil;
+    if (idle && this.lastT && dtRaw < 30) return;
+    const dt = dtRaw;
     this.lastT = t;
     const frames = dt / 16.7; // 相对 60Hz 的帧数，给旧的按帧常量换算
     this.screenFX.setProgress(this.progress);
