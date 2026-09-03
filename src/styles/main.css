@@ -1,3 +1,21 @@
+/* ---------- 自托管字体（Google Fonts latin 子集，两款都是可变字体） ---------- */
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk-300-700.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: 'JetBrains Mono';
+  font-style: normal;
+  font-weight: 100 800;
+  font-display: swap;
+  src: url('/fonts/jetbrains-mono-100-800.woff2') format('woff2');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
 /* ---------- tokens ---------- */
 :root {
   --bg-dark: #0a0a0a;
@@ -6,8 +24,10 @@
   --ink-dim: #6a6a6a; /* ≥3:1 on the near-black bg for info-bearing labels */
   --hairline: #2a2a2a;
   --teal: #3fd8c0;
-  --font-d: 'Space Grotesk', 'Noto Sans SC', sans-serif;
-  --font-m: 'JetBrains Mono', 'Noto Sans SC', monospace;
+  /* 中文走系统字体栈：PingFang / 雅黑 / Noto CJK，不再拉 Noto Sans SC */
+  --font-cjk: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Noto Sans SC', sans-serif;
+  --font-d: 'Space Grotesk', var(--font-cjk);
+  --font-m: 'JetBrains Mono', var(--font-cjk), monospace;
   --hud: #1f1f1f; /* hero day */
 }
 html[data-theme='night'] { --hud: #d6d6d6; }
@@ -97,6 +117,16 @@ body.no-native-cursor, body.no-native-cursor * { cursor: none !important; }
   animation: blink 1s steps(1) infinite;
 }
 @keyframes blink { 50% { opacity: 0; } }
+#cli-skip {
+  position: absolute;
+  left: 50%;
+  bottom: 9vh;
+  transform: translateX(-50%);
+  color: var(--ink-dim);
+  letter-spacing: 0.22em;
+  opacity: 0;
+  pointer-events: none;
+}
 #pre-line {
   position: absolute;
   left: 0;

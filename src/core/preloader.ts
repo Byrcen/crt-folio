@@ -93,6 +93,12 @@ export function runPreloader(ready: Promise<unknown>): Promise<void> {
 
   const MIN_MS = reduced ? 400 : seen ? 900 : 3400;
   const t0 = performance.now();
+  // 可见的跳过入口：首访 0.7s 后淡入（回访与 reduced 本来就不走仪式）
+  const skipHint = document.getElementById('cli-skip');
+  if (skipHint && !seen && !reduced) gsap.to(skipHint, { opacity: 1, duration: 0.5, delay: 0.7 });
+  // 资源真没到时告诉访客在等什么：打完字 1.2s 后 ready 还没来就追加一行
+  let readyDone = false;
+  void ready.then(() => (readyDone = true));
   const progress = gsap.to(line, { scaleX: 0.92, duration: MIN_MS / 1000 + 1.5, ease: 'power1.out' });
   const typed = sequence();
 
@@ -103,6 +109,7 @@ export function runPreloader(ready: Promise<unknown>): Promise<void> {
     if (skipped) return;
     skipped = true;
     printFinalState();
+    if (skipHint) gsap.to(skipHint, { opacity: 0, duration: 0.2, overwrite: true });
     releaseSkip();
   };
   const onKey = (e: KeyboardEvent) => {
@@ -113,7 +120,17 @@ export function runPreloader(ready: Promise<unknown>): Promise<void> {
   window.addEventListener('keydown', onKey);
 
   return new Promise((resolve) => {
+    void Promise.race([typed, skippable]).then(() => {
+      setTimeout(() => {
+        if (readyDone || !panel.isConnected) return;
+        const row = document.createElement('div');
+        row.textContent = 'loading stage… 0.5MB';
+        row.style.opacity = '1';
+        out.appendChild(row);
+      }, 1200);
+    });
     Promise.all([ready, Promise.race([typed, skippable])]).then(() => {
+      if (skipHint) gsap.to(skipHint, { opacity: 0, duration: 0.2, overwrite: true });
       const remaining = skipped ? 0 : Math.max(0, MIN_MS - (performance.now() - t0));
       setTimeout(() => {
         window.removeEventListener('keydown', onKey);

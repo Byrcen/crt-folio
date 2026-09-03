@@ -90,8 +90,4 @@ export function initManifestoEcho(echo: HTMLElement) {
       scrollTrigger: { trigger: '#manifesto', start: 'top bottom', end: 'bottom top', scrub: true },
     },
   );
-  gsap.to('#mani-title', {
-    opacity: 0.25,
-    scrollTrigger: { trigger: '#manifesto', start: 'bottom 45%', end: 'bottom 10%', scrub: true },
-  });
 }

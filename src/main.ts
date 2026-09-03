@@ -281,6 +281,11 @@ function initScrollFx() {
     onLeaveBack: () => stage?.setPaused(false),
   });
 
+  // 展厅的 3.5 屏钉住必须先于它下方的一切触发器建立：ScrollTrigger 按创建顺序
+  // 量位置，先建的触发器量不到后建的钉住撑开的那 3150px，页脚让位、宣言打字机、
+  // 宣言回声都会提前整整一个展厅（M0）
+  initTheater();
+
   // bottom HUD (comment / scroll hint / clock) clears out over the footer
   ScrollTrigger.create({
     trigger: '#footer',
@@ -336,7 +341,6 @@ function initScrollFx() {
   initSteps();
   initLineReveals();
   initWorksTitle();
-  initTheater();
   initFootBox();
   initPillReveals();
 }
@@ -399,7 +403,9 @@ function initEmailCopy() {
 }
 
 // ---------- boot ----------
-const ready = Promise.all([document.fonts.ready, stageReady, new Promise((r) => setTimeout(r, 300))]);
+// 字体最多等 1.5s：自托管后基本秒回，但不能让一个慢字体把整个开场吊死
+const fontsSoon = Promise.race([document.fonts.ready, new Promise((r) => setTimeout(r, 1500))]);
+const ready = Promise.all([fontsSoon, stageReady, new Promise((r) => setTimeout(r, 300))]);
 runPreloader(ready).then(() => {
   // 解锁并归零：lenis.stop() 拦不住键盘与拖动滚动条，且 lenis 会把
   // 内部 targetScroll 动画回旧值 —— 必须用 immediate 重置它自己的目标
