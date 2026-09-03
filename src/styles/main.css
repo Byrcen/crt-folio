@@ -612,8 +612,8 @@ section { position: relative; overflow: hidden; }
   pointer-events: none;
   background: #f2fffa;
   box-shadow:
-    0 0 8px 2px rgba(210, 255, 240, 0.9),
-    0 0 26px 8px rgba(120, 225, 200, 0.45);
+    0 0 8px 2px rgba(210, 255, 240, 0.7),
+    0 0 26px 8px rgba(120, 225, 200, 0.35);
   opacity: 0;
 }
 /* 压暗遮罩：光照强弱由 JS 驱动其透明度（.work 挂 filter 会压平 3D） */
@@ -710,10 +710,10 @@ section { position: relative; overflow: hidden; }
     0 -22px 48px -18px rgba(255, 246, 228, 0.45);
 }
 .work:has(.p-dungeon) .th-halo { --g1: rgba(232, 162, 61, 0.3); }
-.work:has(.p-beads) .th-halo { --g1: rgba(255, 240, 214, 0.28); }
+.work:has(.p-beads) .th-halo { --g1: rgba(255, 240, 214, 0.18); } /* 浅色海报的光晕压低，免得四周起白雾 */
 .work:has(.p-fire) .th-halo { --g1: rgba(255, 120, 50, 0.32); }
-.work:has(.p-peaky) .th-halo { --g1: rgba(230, 214, 170, 0.26); }
-.work:has(.p-life) .th-halo { --g1: rgba(240, 210, 60, 0.3); }
+.work:has(.p-peaky) .th-halo { --g1: rgba(230, 214, 170, 0.16); }
+.work:has(.p-life) .th-halo { --g1: rgba(240, 210, 60, 0.22); }
 .work:has(.p-debate) .th-halo { --g1: rgba(120, 160, 255, 0.28); }
 /* 荧幕玻璃：灯位的漫射高光 + 顶光沿画面向下衰减 + 边角暗角 + 扫描线
    （JS 注入；整层透明度随受光角驱动，灯下才有镜面高光） */
@@ -724,7 +724,7 @@ section { position: relative; overflow: hidden; }
   pointer-events: none;
   background:
     repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.1) 0 1px, transparent 1px 4px),
-    radial-gradient(72% 52% at 50% -10%, rgba(255, 248, 232, 0.2), rgba(255, 248, 232, 0.06) 42%, transparent 72%),
+    radial-gradient(72% 52% at 50% -10%, rgba(255, 248, 232, 0.14), rgba(255, 248, 232, 0.05) 42%, transparent 72%),
     linear-gradient(to bottom, rgba(255, 246, 228, 0.05), transparent 34%, rgba(0, 0, 0, 0.1) 74%, rgba(0, 0, 0, 0.28) 100%),
     radial-gradient(125% 100% at 50% 50%, transparent 58%, rgba(0, 0, 0, 0.24) 100%);
 }
@@ -756,11 +756,37 @@ section { position: relative; overflow: hidden; }
   place-items: center;
 }
 .th-tvback i {
+  position: relative;
   width: 72%;
   height: 56%;
-  border: 1px solid #24221c;
-  border-radius: 8px;
-  background: repeating-linear-gradient(0deg, #1c1a15 0 4px, #14130f 4px 10px);
+  border: 1px solid #262420;
+  border-radius: 6px;
+  /* 背板：哑光塑料 + 上沿一线反光，不再是横条纹占位材质 */
+  background: radial-gradient(60% 50% at 50% 38%, #1d1b17, #131210 72%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04), inset 0 -1px 0 rgba(0, 0, 0, 0.5);
+}
+/* 背板上只留一小片散热栅和一行型号，像一台真机的背面 */
+.th-tvback i::before {
+  content: '';
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  top: 14%;
+  height: 18%;
+  background: repeating-linear-gradient(90deg, #0f0e0c 0 3px, transparent 3px 9px);
+  opacity: 0.8;
+}
+.th-tvback i::after {
+  content: 'CRT · CH 02';
+  position: absolute;
+  left: 50%;
+  bottom: 10%;
+  transform: translateX(-50%);
+  font-family: var(--font-m);
+  font-size: 10px;
+  letter-spacing: 0.3em;
+  color: #3a3833;
+  white-space: nowrap;
 }
 /* 说明文字/源码链接不随环旋转 —— 收进台下说明档 */
 .theater .work .cap,

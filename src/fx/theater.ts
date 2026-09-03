@@ -368,7 +368,7 @@ export function initTheater() {
     const edge = tall > 0.001 ? `${v.toFixed(3)}%` : 'calc(50% - 1px)';
     view.style.clipPath = `inset(${edge} 0)`;
     // 过曝：刚撑开时画面发白，逐渐回落
-    const bloom = 1 + 0.9 * ss(0.02, 0.15, o) * (1 - ss(0.15, 0.9, o));
+    const bloom = 1 + 0.5 * ss(0.02, 0.15, o) * (1 - ss(0.15, 0.9, o)); // 过曝峰值 1.5，不再整帧发白
     view.style.filter = bloom > 1.01 ? `brightness(${bloom.toFixed(3)})` : '';
     phos[0].style.top = edge;
     phos[1].style.bottom = edge;
@@ -430,9 +430,10 @@ export function initTheater() {
     if (intro) intro.style.opacity = Math.max(0, 1 - (rot() * (N - 1)) / 0.5).toFixed(3);
 
     if (entered) {
-      // 台位跟随滚动这个单一事实来源（rotCur 掺着入场偏转和 lerp 滞后）
-      const slot = Math.max(0, Math.min(N - 1, Math.round(rot() * (N - 1))));
-      if (slot !== front) setFront(slot);
+      // 字幕跟画面走：按环当前实际转到的角度（扣掉入场偏转）定台，
+      // 不再按滚动位提前半台就换说明档 / ON AIR / 索引
+      const visSlot = Math.max(0, Math.min(N - 1, Math.round(-(rotCur - entra) / STEPA)));
+      if (visSlot !== front) setFront(visSlot);
       // 吸附对正的"锁定"反馈：光束回弹 + 旋钮声（不打雪花）
       const s = rot() * (N - 1);
       const atSlot = Math.abs(s - Math.round(s)) < 0.02 || rot() <= 0 || rot() >= 1;
