@@ -125,8 +125,16 @@ let aboutInited = false;
 function goTo(page: Page, anchor?: string, fromPop = false) {
   // 接管后退键：不改 URL（本站无深链语义），只补一条历史记录，
   // 否则在「关于我」子页按后退会直接离开本站
-  if (!fromPop) history.pushState({ page, anchor }, '', location.href);
-  void playNoSignal(1100); // 静电声由 playNoSignal 自己发，避免重复
+  // 写 URL：子页 #about、首页锚点写对应 hash，回首页顶部清掉 —— 简历里的深链才可分享
+  const url = page === 'about' ? '#about' : anchor ? anchor : location.pathname + location.search;
+  // 当前页重复点击不换台：子页里再点"关于我"、已在首页顶部再点 logo
+  if (page === 'about' && currentPage === 'about') return;
+  if (page === 'home' && !anchor && currentPage === 'home' && window.scrollY < 8) return;
+  if (!fromPop) history.pushState({ page, anchor }, '', url);
+  // 两档雪花：首页⇄子页是真正的换台走完整相位；首页内锚点与后退只闪短的
+  const short = fromPop || (page === 'home' && !!anchor && currentPage === 'home');
+  const dur = short ? 450 : 1000;
+  void playNoSignal(dur, short ? 'short' : 'full'); // 静电声由 playNoSignal 自己发，避免重复
   setTimeout(() => {
     showPage(page);
     syncTriggers(page);
@@ -147,11 +155,11 @@ function goTo(page: Page, anchor?: string, fromPop = false) {
     const theaterOn = !!document.querySelector('#gallery-pin.theater');
     const offset = anchor === '#works' && theaterOn ? Math.round(innerHeight * THEATER_INTRO) : 0;
     lenis.scrollTo((target as HTMLElement) ?? 0, { immediate: true, force: true, offset });
-  }, 450);
+  }, Math.round(dur * 0.4));
 }
 
 function initNav() {
-  history.replaceState({ page: 'home' as Page }, '', location.href);
+  history.replaceState({ page: currentPage, anchor: currentPage === 'home' ? location.hash || undefined : undefined }, '', location.href);
   addEventListener('popstate', (e) => {
     const st = e.state as { page?: Page; anchor?: string } | null;
     goTo(st?.page ?? 'home', st?.anchor, true);
@@ -187,6 +195,9 @@ function initScrollFx() {
   // 反向同理：在 CH 01 顶上往回滚，静电一闪回到电视静止位。
   let cutting = false;
   let armed = false; // 已停靠、等相机到位再切
+  // 触屏：lenis.stop() 会让手指按着的页面突然不跟手，比滚轮被吞更像故障 ——
+  // 不做停靠等待，推进过半直接切
+  const coarse = matchMedia('(pointer: coarse)').matches;
   let snapTimer = 0;
   const heroEnd = () => heroTrig.end;
   const contentTop = () => heroTrig.end + innerHeight; // spacer 底贴视口底 + 一屏 = 内容区顶贴视口顶
@@ -202,8 +213,9 @@ function initScrollFx() {
     armed = false;
     clearTimeout(snapTimer);
     lenis.stop(); // 静电期间吞掉滚轮惯性，落地后 CH 01 不会被余劲推走
-    const dur = to === 'content' ? 900 : 700;
-    void playNoSignal(dur);
+    // 进 CH 01 是真正的换台走完整相位；切回电视只闪短的
+    const dur = to === 'content' ? 1000 : 450;
+    void playNoSignal(dur, to === 'content' ? 'full' : 'short');
     // 第一帧黑场落下后再换台：跳转本身被静电盖住
     setTimeout(() => {
       // 落点比内容区顶多 1px：ScrollTrigger 在 progress 恰为 0 时不算进入，
@@ -233,7 +245,10 @@ function initScrollFx() {
       if (p >= 0.995) {
         // 只有真正滚到停靠位才停靠；一步跨过整段 spacer 的导航跳转
         //（#works / #contact / 断点重载恢复）落点远在死区之外，不能被拽回来
-        if (self.direction > 0 && !armed && window.scrollY <= self.end + 1) arm(self.end);
+        if (self.direction > 0 && !armed && window.scrollY <= self.end + 1) {
+          if (coarse) cut('content');
+          else arm(self.end);
+        }
         return;
       }
       armed = false;
@@ -247,7 +262,7 @@ function initScrollFx() {
       }
       if (target === null) return; // 0.15–0.6 is a free rest zone
       snapTimer = window.setTimeout(() => {
-        lenis.scrollTo(target!, { duration: 0.9, easing: (t: number) => 1 - Math.pow(1 - t, 3) });
+        lenis.scrollTo(target!, { duration: 0.6, easing: (t: number) => 1 - Math.pow(1 - t, 3) });
       }, 320);
     },
   });
@@ -263,7 +278,16 @@ function initScrollFx() {
     const lo = heroEnd();
     const hi = contentTop();
     if (scroll <= lo + 1 || scroll >= hi - 1) return;
-    if (direction < 0) cut('hero');
+    if (direction < 0) {
+      // 回切要有明确意图：CH 01 顶上手一抖的 2px 不算，退进死区 40px 才切；
+      // 不到 40px 停手就轻轻贴回内容区顶
+      if (scroll > hi - 40) {
+        clearTimeout(snapTimer);
+        snapTimer = window.setTimeout(() => lenis.scrollTo(hi + 1, { duration: 0.35 }), 180);
+        return;
+      }
+      cut('hero');
+    } else if (coarse) cut('content');
     else arm(lo);
   });
 
@@ -423,6 +447,34 @@ runPreloader(ready).then(() => {
   initEmailCopy();
   ScrollTrigger.refresh();
   gsap.set('#hud', { opacity: 1 });
+  // 深链直达：#about 换台进子页，#works / #footer 直落对应章节（开场归零把
+  // 浏览器自己的 hash 跳转抹掉了，这里补回来；断点重载恢复优先）
+  let resumed = false;
+  try {
+    resumed = !!sessionStorage.getItem('crt-resume');
+  } catch {
+    /* 隐私模式下不可用 */
+  }
+  const deep = location.hash;
+  if (!resumed && (deep === '#works' || deep === '#footer' || deep === '#about')) {
+    // 不走 NO SIGNAL：开场刚结束再闪一次静电太吵，直接落位
+    const page: Page = deep === '#about' ? 'about' : 'home';
+    showPage(page);
+    syncTriggers(page);
+    if (page === 'about' && !aboutInited) {
+      aboutInited = true;
+      initAboutPage();
+    }
+    document.documentElement.dataset.zone = 'dark';
+    stage?.setPaused(true);
+    ScrollTrigger.refresh();
+    lenis.resize();
+    const target = page === 'home' ? document.querySelector<HTMLElement>(deep) : null;
+    const theaterOn = !!document.querySelector('#gallery-pin.theater');
+    const offset = deep === '#works' && theaterOn ? Math.round(innerHeight * THEATER_INTRO) : 0;
+    lenis.scrollTo(target ?? 0, { immediate: true, force: true, offset });
+    history.replaceState({ page, anchor: page === 'home' ? deep : undefined }, '', deep);
+  }
   // 断点切换导致的重载：回到读者原先所在的章节，而不是被扔回 hero
   try {
     const resume = sessionStorage.getItem('crt-resume');

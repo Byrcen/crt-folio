@@ -363,7 +363,7 @@ export function initTheater() {
   let lastParX = 0;
   let lastParY = 0;
   let lastK = -1;
-  const update = () => {
+  const update = (dt = 16.7) => {
     if (!visible()) return;
     if (needLayout) layout(); // 子页期间被 resize 打坏的几何在这里自愈
     const o = open();
@@ -373,10 +373,11 @@ export function initTheater() {
     }
     if (!entered && o > 0.2) enter(); // 画面一开始撑开，环就转进光下
     const rotTarget = -rot() * (N - 1) * STEPA + entra;
-    rotCur += (rotTarget - rotCur) * 0.14;
+    rotCur += (rotTarget - rotCur) * (1 - Math.exp(-dt / 110)); // 按时间缓动，跨刷新率一致
     if (Math.abs(rotTarget - rotCur) < 0.01) rotCur = rotTarget;
-    parX += (parTX - parX) * 0.06;
-    parY += (parTY - parY) * 0.06;
+    const kPar = 1 - Math.exp(-dt / 270);
+    parX += (parTX - parX) * kPar;
+    parY += (parTY - parY) * kPar;
     const parMoved = Math.abs(parX - lastParX) > 0.0004 || Math.abs(parY - lastParY) > 0.0004;
     // 灯强在变（入场渐亮、锁定回弹）时光晕也要跟着走，哪怕环已经静止
     if (rotCur === lastRot && R === lastR && !parMoved && light.k === lastK) return; // 静止帧无事可做
@@ -428,7 +429,7 @@ export function initTheater() {
       }
     }
   };
-  gsap.ticker.add(update);
+  gsap.ticker.add((_t, dtMs) => update(Math.min(dtMs, 50)));
 
   // 入场：环带着第一台从侧面转进光下。由每帧的 update 在画面开始撑开时调用
   //（跳过开机段直接落在钉住区之后的锚点跳转，也会在首帧因 o=1 立即入场）

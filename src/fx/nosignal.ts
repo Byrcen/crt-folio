@@ -7,9 +7,13 @@ import { sound } from '../core/sound';
 
 let playing = false;
 
-export function playNoSignal(durationMs = 1000): Promise<void> {
+/**
+ * variant：'full' 走完整相位（黑场 → 玻璃带 → 回扫亮带 → 闪白 → 雪花），用在真正的换台
+ *（缝隙切台、首页⇄子页）；'short' 只有黑场 → 雪花，用在站内锚点、后退、切回电视
+ */
+export function playNoSignal(durationMs = 1000, variant: 'full' | 'short' = 'full'): Promise<void> {
   if (playing) return Promise.resolve();
-  sound.play('static'); // 声画同源：被重入守卫吞掉的调用不会只剩声音
+  sound.play('static', (durationMs * 0.55) / 1000); // 声画同源且等长：被重入守卫吞掉的调用不会只剩声音
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
     return fadeOnly();
   }
@@ -22,7 +26,8 @@ export function playNoSignal(durationMs = 1000): Promise<void> {
   cv.style.display = 'block';
   cv.style.opacity = '1';
 
-  const phases = [0.08, 0.2, 0.32, 0.4, 0.85, 1]; // cumulative fractions
+  // cumulative fractions；short 档把玻璃带 / 回扫 / 闪白三段压成零长
+  const phases = variant === 'short' ? [0.15, 0.15, 0.15, 0.15, 0.85, 1] : [0.08, 0.2, 0.32, 0.4, 0.85, 1];
   // frame-delta clock (capped): a backgrounded tab pauses instead of skipping
   let elapsed = 0;
   let last = performance.now();
@@ -68,15 +73,17 @@ export function playNoSignal(durationMs = 1000): Promise<void> {
         c.fillRect(0, 0, W, H);
         const grd = c.createLinearGradient(0, y - 30, 0, y + 30);
         grd.addColorStop(0, 'rgba(180,220,255,0)');
-        grd.addColorStop(0.5, 'rgba(220,240,255,0.95)');
+        grd.addColorStop(0.5, 'rgba(220,240,255,0.7)');
         grd.addColorStop(1, 'rgba(180,220,255,0)');
         c.fillStyle = grd;
         c.fillRect(0, y - 30, W, 60);
       } else if (p < phases[3]) {
-        // blue-white full flash with herringbone
-        c.fillStyle = '#cfe2ff';
+        // 闪白：峰值压到中亮蓝灰，并在这一段里线性衰减到雪花均值，不再整屏硬白
+        const t = (p - phases[2]) / (phases[3] - phases[2]);
+        const mix = (a: number, b: number) => Math.round(a + (b - a) * t);
+        c.fillStyle = `rgb(${mix(169, 120)},${mix(187, 132)},${mix(216, 150)})`;
         c.fillRect(0, 0, W, H);
-        c.fillStyle = 'rgba(40,80,160,0.4)';
+        c.fillStyle = 'rgba(40,80,160,0.55)';
         for (let y = 0; y < H; y += 3) c.fillRect((y % 6) - 3, y, W, 1);
       } else if (p < phases[4]) {
         // snow static + NO SIGNAL

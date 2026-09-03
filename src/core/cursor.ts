@@ -24,19 +24,24 @@ export function initCursor() {
   });
   document.documentElement.addEventListener('mouseleave', () => (pointerIn = false));
 
-  const LERP = 0.13;
-  const tick = () => {
+  // 按时间缓动（τ=120ms），不同刷新率下跟随手感一致
+  let last = 0;
+  const tick = (now: number) => {
+    const dt = last ? Math.min(now - last, 50) : 16.7;
+    last = now;
+    const k = 1 - Math.exp(-dt / 120);
     if (pointerIn) {
-      const nx = x + (tx - x) * LERP;
-      const ny = y + (ty - y) * LERP;
+      const nx = x + (tx - x) * k;
+      const ny = y + (ty - y) * k;
       vx = nx - x;
       vy = ny - y;
       x = nx;
       y = ny;
     } else {
       // inertial drift after the pointer leaves
-      vx *= 0.96;
-      vy *= 0.96;
+      const damp = Math.pow(0.96, dt / 16.7);
+      vx *= damp;
+      vy *= damp;
       x += vx;
       y += vy;
     }

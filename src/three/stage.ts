@@ -86,6 +86,7 @@ export class Stage {
   private mouse = { x: 0, y: 0 }; // -1..1 parallax
   private progress = 0; // raw scroll progress
   private eased = 0; // lerped camera progress
+  private lastT = 0; // 上一帧时间戳：缓动按真实 dt，不同刷新率手感一致
   private paused = false;
   private onKnob?: () => void;
   private onScreen?: () => void;
@@ -270,7 +271,7 @@ export class Stage {
 
   /** 推进镜头已基本停靠（缓动余量 < 4%），缝隙切台以此为准 */
   get docked() {
-    return this.eased > 0.96;
+    return this.eased > 0.9;
   }
 
   /** world point → screen px, for DOM labels anchored to 3D */
@@ -353,7 +354,13 @@ export class Stage {
   }
 
   private tick(t: number) {
-    if (this.paused) return;
+    if (this.paused) {
+      this.lastT = 0;
+      return;
+    }
+    const dt = this.lastT ? Math.min(t - this.lastT, 50) : 16.7;
+    this.lastT = t;
+    const frames = dt / 16.7; // 相对 60Hz 的帧数，给旧的按帧常量换算
     this.screenFX.setProgress(this.progress);
     this.screenFX.update(t);
 
@@ -364,7 +371,7 @@ export class Stage {
     if (!this.reduced && dustMat.opacity > 0.01) {
       const pos = this.dust.geometry.attributes.position as THREE.BufferAttribute;
       for (let i = 0; i < pos.count; i++) {
-        let y = pos.getY(i) - 0.0005;
+        let y = pos.getY(i) - 0.0005 * frames;
         if (y < -0.5) y = 2.4;
         pos.setY(i, y);
       }
@@ -373,7 +380,7 @@ export class Stage {
 
     // dolly: accelerate toward the screen, smoothed
     const shaped = Math.pow(this.progress, 1.9);
-    this.eased += (shaped - this.eased) * 0.09;
+    this.eased += (shaped - this.eased) * (1 - Math.exp(-dt / 140)); // τ≈140ms：停靠等待更短
     const e = this.eased;
     this.camera.position.lerpVectors(this.startPos, this.endPos, e);
 

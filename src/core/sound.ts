@@ -16,7 +16,7 @@ class SoundFX {
     }
   }
 
-  play(name: 'tick' | 'click' | 'switch' | 'static' | 'reveal' | 'poweron' | 'zap') {
+  play(name: 'tick' | 'click' | 'switch' | 'static' | 'reveal' | 'poweron' | 'zap', dur?: number) {
     if (!this.enabled || !this.ctx || this.ctx.state !== 'running') return;
     const t = this.ctx.currentTime;
     switch (name) {
@@ -40,8 +40,8 @@ class SoundFX {
         this.blip(t, 150, 0.1, 0.14, 'sine');
         this.noise(t, 0.04, 0.06, 2400);
         break;
-      case 'static': // NO SIGNAL: band-passed static burst
-        this.noise(t, 0.65, 0.07, 1100);
+      case 'static': // NO SIGNAL: band-passed static burst（时长跟画面走）
+        this.noise(t, dur ?? 0.65, 0.07, 1100);
         break;
       case 'reveal': // preloader exit: soft rising sweep
         this.sweep(t, 220, 480, 0.4, 0.05);
