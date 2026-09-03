@@ -1,6 +1,5 @@
 import { ScrollTrigger } from './core/scroll';
 import { typeOnce } from './fx/typewriter';
-import { decodeIn } from './fx/scramble';
 
 const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
 
@@ -96,7 +95,7 @@ export function initAboutPage() {
         return;
       }
       void typeOnce(ctaTitle, '如果你想一起做点什么', 55);
-      setTimeout(() => decodeIn(decode, '按下那个按钮就行', 900), 500);
+      setTimeout(() => (decode.textContent = '按下那个按钮就行'), 500);
     },
   });
 }

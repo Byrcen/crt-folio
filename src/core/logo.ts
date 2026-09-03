@@ -2,9 +2,8 @@
 const C = ['.####', '#....', '#....', '#....', '#....', '.####'];
 const R = ['####.', '#...#', '####.', '#.#..', '#..#.', '#...#'];
 const Y = ['#...#', '#...#', '.#.#.', '..#..', '..#..', '..#..'];
-const SCRAMBLE = '#%&@?*+=<>';
 
-export function initLogo(canvas: HTMLCanvasElement) {
+export function initLogo(canvas: HTMLCanvasElement, opts: { still?: boolean } = {}) {
   const ctx = canvas.getContext('2d')!;
   const cell = 4;
   const cols = 17; // 5 + gap + 5 + gap + 5
@@ -23,36 +22,41 @@ export function initLogo(canvas: HTMLCanvasElement) {
   const color = () =>
     getComputedStyle(document.documentElement).getPropertyValue('--hud').trim() || '#ededed';
 
-  const draw = () => {
+  const drawFull = () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.fillStyle = color();
-    // reduced-motion：恒走完整字标分支，每帧像素一致（颜色仍随日夜翻转）
-    const mode = reduced ? 0 : Math.random();
     const ox = (canvas.width - cols * cell) / 2;
-    if (mode < 0.82) {
-      // full monogram — the brand mark should read clearly most of the time
-      for (const [x, y] of pixels) ctx.fillRect(ox + x * cell, y * cell, cell - 1, cell - 1);
-    } else if (mode < 0.9) {
-      // sparse dot cloud
-      for (const [x, y] of pixels) {
-        if (Math.random() < 0.55) ctx.fillRect(ox + x * cell, y * cell, cell - 1, cell - 1);
-      }
-    } else if (mode < 0.96) {
-      // scrambled characters
-      ctx.font = '700 20px "JetBrains Mono", monospace';
-      ctx.textBaseline = 'top';
-      let s = '';
-      for (let i = 0; i < 3; i++) s += SCRAMBLE[(Math.random() * SCRAMBLE.length) | 0];
-      ctx.fillText(s, ox + 2, 2);
-    } else {
-      // sliced invert: full glyph + a displaced scan band
-      for (const [x, y] of pixels) ctx.fillRect(ox + x * cell, y * cell, cell - 1, cell - 1);
-      const bandY = (Math.random() * rows) | 0;
-      const slice = ctx.getImageData(0, bandY * cell, canvas.width, cell);
-      ctx.clearRect(0, bandY * cell, canvas.width, cell);
-      ctx.putImageData(slice, (Math.random() * 10 - 5) | 0, bandY * cell);
-    }
-    setTimeout(draw, 680 + Math.random() * 760);
+    for (const [x, y] of pixels) ctx.fillRect(ox + x * cell, y * cell, cell - 1, cell - 1);
   };
-  draw();
+  // 故障只留一种：完整字标 + 一条错位扫描带，80–140ms 后恢复
+  const drawSlice = () => {
+    drawFull();
+    const bandY = (Math.random() * rows) | 0;
+    const slice = ctx.getImageData(0, bandY * cell, canvas.width, cell);
+    ctx.clearRect(0, bandY * cell, canvas.width, cell);
+    ctx.putImageData(slice, (Math.random() * 10 - 5) | 0, bandY * cell);
+  };
+  let restoreT = 0;
+  const glitch = (ms: number) => {
+    drawSlice();
+    clearTimeout(restoreT);
+    restoreT = window.setTimeout(drawFull, ms);
+  };
+  drawFull();
+  // 颜色随日夜 / 分区翻转：属性一变就重绘（不再靠常态重绘顺带更新）
+  new MutationObserver(() => {
+    clearTimeout(restoreT);
+    drawFull();
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme', 'data-zone'] });
+  if (reduced || opts.still) return; // 页脚与子页的字标恒完整
+  const schedule = () => {
+    window.setTimeout(() => {
+      glitch(80 + Math.random() * 60);
+      schedule();
+    }, 20000 + Math.random() * 10000); // 每 20–30s 一次
+  };
+  schedule();
+  // hover / 聚焦：一次 300ms 切片当按钮反馈
+  canvas.addEventListener('pointerenter', () => glitch(300));
+  canvas.addEventListener('focus', () => glitch(300));
 }

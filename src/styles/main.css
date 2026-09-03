@@ -302,6 +302,7 @@ body.no-native-cursor, body.no-native-cursor * { cursor: none !important; }
   transform: translateX(-50%);
 }
 #hud-scroll b { animation: blink 1.2s steps(1) infinite; }
+.caret.settled { animation: none; opacity: 0.85; }
 #hud-clock {
   position: absolute;
   right: 3.5vw;
@@ -313,15 +314,6 @@ html[data-foot] #hud-scroll,
 html[data-foot] #hud-clock { opacity: 0; }
 /* 展厅钉住期间滚动的语义是换台，"向下滚动"先让开 */
 html[data-theater] #hud-scroll { opacity: 0; }
-.reg-dot {
-  position: absolute;
-  top: 10px;
-  width: 3px;
-  height: 3px;
-  border-radius: 50%;
-  background: currentColor;
-  opacity: 0.7;
-}
 
 /* ---------- scroll layout ---------- */
 main { position: relative; z-index: 2; pointer-events: none; }
@@ -1634,10 +1626,12 @@ html[data-zone='dark'] #top-fade { opacity: 1; }
   inset: -100px;
   z-index: 70;
   pointer-events: none;
-  opacity: 0.05;
+  opacity: 0.035;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  animation: grain-shift 0.9s steps(4) infinite;
+  /* 常态是静态贴图：整屏颗粒一直抖是最大的常驻噪音源；只在首页电视区慢速抖 */
+  animation: none;
 }
+html[data-zone='hero'] #grain { animation: grain-shift 1.8s steps(2) infinite; }
 @keyframes grain-shift {
   0% { transform: translate(0, 0); }
   25% { transform: translate(-30px, 22px); }
@@ -1684,7 +1678,9 @@ html[data-zone='dark'] #top-fade { opacity: 1; }
   margin: -1px;
   background: #fff;
 }
-#cursor.is-hover { transform: scale(1.6) rotate(45deg); }
+#cursor.is-hover { transform: scale(1.2); }
+#cursor.is-grab { transform: scale(0.8); }
+#cursor.is-grab::after { width: 6px; height: 6px; }
 body.cursor-hidden #cursor { opacity: 0; }
 
 /* ---------- reveal helpers ---------- */
@@ -1811,7 +1807,7 @@ html[data-zone='dark'] #freq-ruler { opacity: 1; }
   .feat-item { min-height: 0; margin-bottom: 8vh; }
   #freq-ruler, #sig-meter, .ap-coord { display: none; }
   #mani-watermark { font-size: 40vw; }
-  #cursor, #hud-comment, .reg-dot { display: none; }
+  #cursor, #hud-comment { display: none; }
   /* 固定 HUD 底排压在海报上：暗区里垫一层向上渐隐的底衬 */
   html[data-zone='dark'] #hud::before {
     content: '';

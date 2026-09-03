@@ -39,8 +39,8 @@ initCursor();
 initClock();
 bindScrambleHover();
 initLogo(document.getElementById('hud-logo') as HTMLCanvasElement);
-initLogo(document.getElementById('foot-logo') as HTMLCanvasElement);
-initLogo(document.getElementById('ap-logo') as HTMLCanvasElement);
+initLogo(document.getElementById('foot-logo') as HTMLCanvasElement, { still: true });
+initLogo(document.getElementById('ap-logo') as HTMLCanvasElement, { still: true });
 
 // ---------- 3D stage (lazy chunk; the CLI preloader masks the load) ----------
 let stage: Stage | null = null;
@@ -323,7 +323,7 @@ function initScrollFx() {
     document.getElementById('about-title')!,
     COPY.aboutStem,
     COPY.words,
-    { typeMs: 58 },
+    { typeMs: 58, rounds: 1 }, // 尾词轮一遍就停：定位语得有一个定稿
   );
   let aboutStarted = false;
   ScrollTrigger.create({

@@ -23,13 +23,17 @@ export function initCursor() {
     pointerIn = true;
   });
   document.documentElement.addEventListener('mouseleave', () => (pointerIn = false));
+  // 按下：准星收缩成实心点，给拖拽 / 点击一个反馈
+  addEventListener('pointerdown', () => el.classList.add('is-grab'));
+  addEventListener('pointerup', () => el.classList.remove('is-grab'));
+  addEventListener('pointercancel', () => el.classList.remove('is-grab'));
 
   // 按时间缓动（τ=120ms），不同刷新率下跟随手感一致
   let last = 0;
   const tick = (now: number) => {
     const dt = last ? Math.min(now - last, 50) : 16.7;
     last = now;
-    const k = 1 - Math.exp(-dt / 120);
+    const k = 1 - Math.exp(-dt / 45);
     if (pointerIn) {
       const nx = x + (tx - x) * k;
       const ny = y + (ty - y) * k;

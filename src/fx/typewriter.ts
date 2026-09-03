@@ -6,13 +6,16 @@ export interface TypeLoopOpts {
   deleteMs?: number;
   holdMs?: number; // pause with full sentence
   gapMs?: number; // pause after deletion
+  rounds?: number; // 尾词轮换几轮后停在最后一个词上（默认无限）
   onUpdate: (text: string) => void;
+  onSettle?: () => void; // 停下来时回调（光标停闪）
 }
 
 export class TypeLoop {
   private opts: Required<TypeLoopOpts>;
   private timer = 0;
   private wordIdx = 0;
+  private round = 0;
   private stopped = false;
 
   constructor(opts: TypeLoopOpts) {
@@ -21,6 +24,8 @@ export class TypeLoop {
       deleteMs: 34,
       holdMs: 1600,
       gapMs: 220,
+      rounds: Infinity,
+      onSettle: () => {},
       ...opts,
     };
   }
@@ -59,6 +64,12 @@ export class TypeLoop {
 
   private cycle() {
     if (this.stopped) return;
+    // 转到最后一个词且轮数够了：就停在这句上，不再删字
+    if (this.wordIdx === this.opts.words.length - 1 && ++this.round >= this.opts.rounds) {
+      this.stopped = true;
+      this.opts.onSettle();
+      return;
+    }
     this.timer = window.setTimeout(() => this.deleteWord(), this.opts.holdMs);
   }
 
@@ -93,6 +104,7 @@ export function domTypeLoop(el: HTMLElement, stem: string, words: string[], opts
     stem,
     words,
     onUpdate: (t) => (text.textContent = t),
+    onSettle: () => caret.classList.add('settled'),
     ...opts,
   } as TypeLoopOpts);
 }
