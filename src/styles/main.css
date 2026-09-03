@@ -285,24 +285,27 @@ body.no-native-cursor, body.no-native-cursor * { cursor: none !important; }
   transition: left 0.25s ease;
 }
 #sound-toggle.on i { left: 20px; }
+/* 触控热区：开关本体只有 34×16，指尖需要至少 44px */
+#sound-toggle { position: relative; }
+#sound-toggle::after { content: ''; position: absolute; inset: -12px; }
 #hud-comment {
   position: absolute;
   left: 3.5vw;
-  bottom: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   max-width: 240px;
   opacity: 0.9;
 }
 #hud-scroll {
   position: absolute;
   left: 50%;
-  bottom: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
 }
 #hud-scroll b { animation: blink 1.2s steps(1) infinite; }
 #hud-clock {
   position: absolute;
   right: 3.5vw;
-  bottom: 24px;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
 }
 #hud-comment, #hud-scroll, #hud-clock { transition: opacity 0.4s ease; }
 html[data-foot] #hud-comment,
@@ -332,6 +335,7 @@ main #content { pointer-events: auto; }
 section { position: relative; overflow: hidden; }
 #about {
   min-height: 100vh;
+  min-height: 100dvh;
   padding: 16vh 3.5vw 12vh;
   background:
     linear-gradient(to bottom, rgba(10, 10, 10, 0) 60%, #0a0a0a 100%),
@@ -1407,6 +1411,7 @@ section { position: relative; overflow: hidden; }
 .ap-hero {
   position: relative;
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1681,14 +1686,14 @@ body.cursor-hidden #cursor { opacity: 0; }
 /* ---------- broadcast layer: channel badges / freq ruler / supports ---------- */
 .ch-badge {
   position: absolute;
-  top: 5vh;
+  top: clamp(96px, 11vh, 120px); /* 落在固定导航之下，不再和「作品」那行像素级重叠 */
   left: 3.5vw;
   color: var(--ink-dim);
   letter-spacing: 0.22em;
   opacity: 0;
   z-index: 2;
 }
-#footer .ch-badge { top: 2vh; }
+#footer .ch-badge { top: clamp(64px, 8vh, 96px); }
 #page-about .ch-badge { top: 12vh; } /* 子页无滚动语境，避开 HUD 导航 */
 .ch-badge.on { animation: ch-flick 0.5s steps(2) both; }
 @keyframes ch-flick {
@@ -1776,6 +1781,22 @@ html[data-zone='dark'] #freq-ruler { opacity: 1; }
   #freq-ruler, #sig-meter, .ap-coord { display: none; }
   #mani-watermark { font-size: 40vw; }
   #cursor, #hud-comment, .reg-dot { display: none; }
+  /* 固定 HUD 底排压在海报上：暗区里垫一层向上渐隐的底衬 */
+  html[data-zone='dark'] #hud::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: calc(76px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(to top, rgba(10, 10, 10, 0.88), rgba(10, 10, 10, 0));
+    pointer-events: none;
+  }
+  /* 导航每项 11px 一行、间距 4px，指尖一按盖两行：拉开行距、加触控内边距 */
+  #hud-nav { gap: 2px; }
+  #hud-nav a { padding: 5px 0; }
+  /* 宣言在手机上不再硬撑 1.2 屏，终屏上方不留 370px 空白 */
+  #manifesto { min-height: 100vh; min-height: 100dvh; }
   .type-title { max-width: 96%; }
   #about-title { max-width: 96%; font-size: clamp(26px, 7.2vw, 40px); }
   #steps { position: relative; top: 0; right: 0; margin-top: 6vh; }
